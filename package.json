@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "@discordjs/builders": "^1.1.0",
+    "@discordjs/rest": "^1.0.1",
+    "colors": "^1.4.0",
+    "crypto": "^1.0.1",
+    "discord-api-types": "^0.37.2",
+    "discord.js": "^14.2.0",
+    "dotenv": "^16.0.1",
+    "fs": "^0.0.1-security"
+  },
+  "name": "discordjs-bot-template",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nininanou16/DiscordJS-bot-template.git"
+  },
+  "author": "Nininanou16",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Nininanou16/DiscordJS-bot-template/issues"
+  },
+  "homepage": "https://github.com/Nininanou16/DiscordJS-bot-template#readme",
+  "description": "",
+  "devDependencies": {
+    "eslint": "^8.22.0"
+  }
+}
