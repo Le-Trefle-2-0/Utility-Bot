@@ -14,7 +14,7 @@ module.exports = {
 		}
 		console.log(colors.red(`\n${Date().toLocaleString('FR-fr')} - Error :\n${log}\n\nFor complete log please see Logs/Errors/${errId}.log`));
         
-        saveLogs('Errors', log, errId);
+        saveLogs('Errors', txt, errId);
 	},
     
     warning: (log) => {
@@ -28,7 +28,7 @@ module.exports = {
         }
         console.log(colors.yellow(`\n${Date().toLocaleString('FR-fr')} - Warning :\n${log}\n\nFor complete log please see Logs/Warnings/${errId}.log`));
 
-        saveLogs('Warnings', log, errId);
+        saveLogs('Warnings', txt, errId);
 	},
 
 	info: (log) => {
