@@ -71,7 +71,14 @@ module.exports = {
                         progressBar += '<:ligne:913706646864293908>';
                     }
                 }
-                let playTime = new Date(progress).toISOString();
+                let currentPlayTime = new Date(progress);
+                let playTime = `${currentPlayTime.getMinutes().toString()}:${currentPlayTime.getSeconds().toString().length = 2 ? `0${currentPlayTime.getSeconds()}` : currentPlayTime.getSeconds()}`;
+
+                let toPlayTxt = '';
+                for (let i = 0; i < queue.songs.length; i++) {
+                    if (i == 0) continue;
+                    toPlayTxt += `**${i}.** ${queue.songs[i].title} (${queue.songs[i].durationFormatted})\n`;
+                }
 
                 queue.dashboard.edit({
                     embeds: [
@@ -89,8 +96,7 @@ module.exports = {
             }, 1000);
 
             let toPlayTxt = '';
-            for (let i = 0; i < queue.songs.length; i++) {
-                if (i == 0) continue;
+            for (let i = 1; i < queue.songs.length; i++) {
                 toPlayTxt += `**${i}.** ${queue.songs[i].title} (${queue.songs[i].durationFormatted})\n`;
             }
 
