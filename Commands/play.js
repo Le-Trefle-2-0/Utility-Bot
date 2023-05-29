@@ -55,14 +55,14 @@ module.exports = {
             });
         }
 
-        interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
         let search = await ytsearch.search(interaction.options.getString('recherche'), { limit: 1 });
         
         let serverQueue = Client.queue.get(interaction.guild.id);
-        if (!serverQueue) {
-            let song = search[0];
-            song.addedBy = interaction.user;
+        let song = search[0];
+        song.addedBy = interaction.user;
 
+        if (!serverQueue) {
             let dashboard = await interaction.channel.send({
                 embeds: [
                     new EmbedBuilder()
