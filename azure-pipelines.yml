@@ -8,6 +8,7 @@ trigger:
 
 pool:
   vmImage: ubuntu-latest
+  environment: Utility-Bot
 
 steps:
 - task: NodeTool@0
