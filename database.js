@@ -37,5 +37,9 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: false
         },
+        channelID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
     }).sync({ alter: true });
 }
