@@ -46,4 +46,16 @@ module.exports = async (Client, interaction) => {
             }
         }
     }
+
+    if (interaction.isModalSubmit()) {
+        let modal = Client.modals.get(interaction.customId);
+
+        if (modal) {
+            try {
+                modal(Client, interaction);
+            } catch (e) {
+                if (e) Client.log.error(e);
+            }
+        }
+    }
 }
