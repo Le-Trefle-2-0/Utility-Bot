@@ -33,18 +33,13 @@ module.exports = async (Client) => {
             primaryKey: true,
             autoIncrement: true
         },
-        user: {
+        userID: {
             type: sequelize.STRING,
             allowNull: false
         },
         reason: {
             type: sequelize.STRING,
             allowNull: false
-        },
-        status: {
-            type: sequelize.STRING,
-            allowNull: false,
-            defaultValue: 'pending'
         }
-    }).sync();
+    }).sync({ alter: true });
 }
