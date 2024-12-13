@@ -7,7 +7,7 @@ module.exports = (Client) => {
         files.forEach(file => {
             let name = file.split('.')[0];
 
-            Client.buttons.set(name, require(`./Buttons/${file}`));
+            Client.buttons.set(name, require(`../Buttons/${file}`));
         })
     });
 }

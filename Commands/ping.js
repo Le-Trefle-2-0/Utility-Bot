@@ -8,8 +8,8 @@ module.exports = {
             embeds: [
                 new EmbedBuilder()
                     .setColor('#0099ff')
-                    .setDescription(`🛰️ | Discord latency: \`${Client.ws.ping}\`
-                    🚀 | Up since: <t:${Math.round((Date.now()-Client.uptime)/1000)}:R>`)
+                    .setDescription(`🛰️ | Latence avec Discord : \`${Client.ws.ping}\`
+                    🚀 | En ligne depuis : <t:${Math.round((Date.now()-Client.uptime)/1000)}:R>`)
             ]
         })
     }
