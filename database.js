@@ -7,6 +7,22 @@ module.exports = (Client) => {
         logging: false
     });
 
+    Client.Questions = Client.db.define('questions', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        question: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        answer: {
+            type: sequelize.STRING,
+            allowNull: false
+        }
+    });
+
     Client.Tickets = Client.db.define('tickets', {
         id: {
             type: sequelize.INTEGER,
