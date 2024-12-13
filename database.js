@@ -37,9 +37,5 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: false
         },
-        reason: {
-            type: sequelize.STRING,
-            allowNull: false
-        }
     }).sync({ alter: true });
 }
