@@ -1,13 +1,13 @@
 const sequelize = require('sequelize');
 
-module.exports = (Client) => {
+module.exports = async (Client) => {
     Client.db = new sequelize({
         dialect: 'sqlite',
         storage: './database.sqlite',
         logging: false
     });
 
-    Client.Questions = Client.db.define('questions', {
+    Client.Questions = await Client.db.define('questions', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
@@ -20,10 +20,14 @@ module.exports = (Client) => {
         answer: {
             type: sequelize.STRING,
             allowNull: false
+        },
+        threadLink: {
+            type: sequelize.STRING,
+            allowNull: true
         }
-    });
+    }).sync({ alter: true });
 
-    Client.Tickets = Client.db.define('tickets', {
+    Client.Tickets = await Client.db.define('tickets', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
@@ -42,5 +46,5 @@ module.exports = (Client) => {
             allowNull: false,
             defaultValue: 'pending'
         }
-    });
-} // �
+    }).sync();
+}
