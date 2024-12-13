@@ -16,7 +16,7 @@ module.exports = async (Client, interaction) => {
 
         if (menu) {
             try {
-                menu.run(Client, interaction);
+                menu(Client, interaction);
             } catch (e) {
                 if (e) Client.log.error(e);
             }
