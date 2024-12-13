@@ -42,8 +42,7 @@ module.exports = async (Client, interaction) => {
         });
 
         let ticketEmbed = new EmbedBuilder()
-            .setTitle(`Ticket de ${interaction.user.tag}`)
-            .setDescription(`Ticket ouvert par ${interaction.user.tag}`)
+            .setDescription(`Merci de détailler votre demande, un membre de l'équipe ${role.name} va vous répondre dans les plus brefs délais.`)
             .setColor('9bd2d2')
             .setTimestamp();
 
