@@ -8,7 +8,7 @@ module.exports = async (Client) => {
 
     Client.log.info('Starting commands publication');
 
-    Client.musicPlayer.init(Client);
+    // Client.musicPlayer.init(Client);
 
     let commands = [];
 
