@@ -8,7 +8,7 @@ client.buttons = new Collection();
 client.menus = new Collection();
 client.contextMenus = new Collection();
 client.modals = new Collection();
-client.musicPlayer = require('./Utility/musicPlayer');
+// client.musicPlayer = require('./Utility/musicPlayer');
 client.algolia = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_ADMIN_KEY);
 
 module.exports.login = () => {

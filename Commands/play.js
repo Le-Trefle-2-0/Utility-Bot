@@ -1,7 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
-const ytdl = require('ytdl-core');
-const {joinVoiceChannel, VoiceConnection} = require('@discordjs/voice');
-const ytsearch = require('youtube-sr').default;
+// const { EmbedBuilder } = require('discord.js');
+// const ytdl = require('ytdl-core');
+// const {joinVoiceChannel, VoiceConnection} = require('@discordjs/voice');
+// const ytsearch = require('youtube-sr').default;
 
 module.exports = {
     description: 'Joue une musique',
@@ -14,6 +14,7 @@ module.exports = {
         }
     ],
     run: async (Client, interaction) => {
+        return; // TODO: temporary return for prod
         let userVoice = interaction.member.voice.channel;
         if (!userVoice) {
             return interaction.reply({
