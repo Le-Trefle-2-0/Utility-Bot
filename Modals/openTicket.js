@@ -26,12 +26,12 @@ module.exports = async (Client, interaction) => {
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Guide')
-                    .setValue('1317139593279307838')
+                    .setValue('952298658467053578')
                     .setDescription('Contacter l\'équipe de Guide')
                     .setEmoji('1207378732625567824'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Modération')
-                    .setValue('1317139564799721614')
+                    .setValue('718247067234861103')
                     .setDescription('Contacter l\'équipe de Modération')
                     .setEmoji('1207378624030965770')
             )
