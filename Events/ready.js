@@ -13,6 +13,7 @@ module.exports = async (Client) => {
     let commands = [];
 
     Client.commands.forEach(command => {
+        if (process.env.ENVIRONMENT !== "dev" && command.description?.startsWith("DEVMODE")) return;
         let data = new SlashCommandBuilder()
                 .setName(command.name)
                 .setDescription(command.description || 'Aucune description');
