@@ -1,13 +1,13 @@
 const { readdir } = require('fs');
 
 module.exports = (Client) => {
-    readdir('./Menus', (err, files) => {
+    readdir('./Modals', (err, files) => {
         if (err) throw err
     
         files.forEach(file => {
             let name = file.split('.')[0];
 
-            Client.menus.set(name, require(`../Menus/${file}`));
+            Client.modals.set(name, require(`../Modals/${file}`));
         })
     });
 }

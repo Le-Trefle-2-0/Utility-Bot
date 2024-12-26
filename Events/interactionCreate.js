@@ -11,14 +11,14 @@ module.exports = async (Client, interaction) => {
         }
     }
 
-    if (interaction.isSelectMenu()) {
+    if (interaction.isStringSelectMenu()) {
         let menu = Client.menus.get(interaction.customId);
 
         if (menu) {
             try {
                 menu(Client, interaction);
             } catch (e) {
-                if (e) Client.logs.error(e);
+                if (e) Client.log.error(e);
             }
         }
     }
@@ -30,7 +30,31 @@ module.exports = async (Client, interaction) => {
             try {
                 command.run(Client, interaction)
             } catch (e) {
-                if (e) Client.logs.error(e);
+                if (e) Client.log.error(e);
+            }
+        }
+    }
+
+    if (interaction.isContextMenuCommand()) {
+        let contextMenu = Client.contextMenus.get(interaction.commandName);
+
+        if (contextMenu) {
+            try {
+                contextMenu.run(Client, interaction);
+            } catch (e) {
+                if (e) Client.log.error(e);
+            }
+        }
+    }
+
+    if (interaction.isModalSubmit()) {
+        let modal = Client.modals.get(interaction.customId);
+
+        if (modal) {
+            try {
+                modal(Client, interaction);
+            } catch (e) {
+                if (e) Client.log.error(e);
             }
         }
     }

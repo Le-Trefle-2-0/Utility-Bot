@@ -1,30 +1,45 @@
 const sequelize = require('sequelize');
 
-module.exports = (Client) => {
+module.exports = async (Client) => {
     Client.db = new sequelize({
         dialect: 'sqlite',
         storage: './database.sqlite',
         logging: false
     });
 
-    Client.Tickets = Client.db.define('tickets', {
+    Client.Questions = await Client.db.define('questions', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        user: {
+        question: {
             type: sequelize.STRING,
             allowNull: false
         },
-        reason: {
+        answer: {
             type: sequelize.STRING,
             allowNull: false
         },
-        status: {
+        threadLink: {
             type: sequelize.STRING,
-            allowNull: false,
-            defaultValue: 'pending'
+            allowNull: true
         }
-    });
-} // �
+    }).sync({ alter: true });
+
+    Client.Tickets = await Client.db.define('tickets', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        channelID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+    }).sync({ alter: true });
+}

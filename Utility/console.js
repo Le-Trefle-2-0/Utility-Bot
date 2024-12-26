@@ -44,14 +44,14 @@ function saveLogs(logType, message, UUID) {
 
 function genUniqueUUID() {
 	const UUID = randomUUID();
-	readdir('../Logs/Errors', (err, files) => {
+	readdir('./Logs/Errors', (err, files) => {
 		if (err) throw err;
 		if (files.includes(`${UUID}.log`)) {
 			return genUniqueUUID();
 		}
 	});
 
-	readdir('../Logs/Warnings', (err, files) => {
+	readdir('./Logs/Warnings', (err, files) => {
 		if (err) throw err;
 		if (files.includes(`${UUID}.log`)) {
 			return genUniqueUUID();

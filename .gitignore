@@ -105,3 +105,4 @@ dist
 
 # Editor config
 .eslintrc.json
+database.sqlite
