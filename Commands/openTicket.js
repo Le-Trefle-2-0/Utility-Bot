@@ -9,14 +9,15 @@ module.exports = {
             new ButtonBuilder()
                 .setCustomId('openTicket')
                 .setLabel('Ouvrir un ticket')
-                .setStyle(1)
+                .setStyle(2)
         )
 
         interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setColor('9bd2d2')
-                    .setDescription(`Ouvrir un ticket`)
+                    .setTitle('Nous contacter')
+                    .setDescription(`Afin d'ouvrir un ticket, merci de cliquer sur le bouton ci-dessous.`)
             ], components: [row], ephemeral: true
         })
     }
