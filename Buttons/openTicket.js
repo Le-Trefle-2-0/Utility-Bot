@@ -8,7 +8,7 @@ module.exports = async (Client, interaction) => {
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('question')
-                        .setLabel('Quelle est votre question ?')
+                        .setLabel('Expliquez en quelques mots votre demande.')
                         .setRequired(true)
                         .setMaxLength(70)
                         .setStyle(TextInputStyle.Short)
