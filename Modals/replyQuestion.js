@@ -28,7 +28,7 @@ module.exports = async (Client, interaction) => {
                         .setDescription(reply)
                         .setAuthor({
                             name: interaction.user.displayName, 
-                            iconURL: message.author.displayAvatarURL({ dynamic: true })
+                            iconURL: interaction.user.displayAvatarURL({ dynamic: true })
                         })
                 ]
             });
