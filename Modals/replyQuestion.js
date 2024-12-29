@@ -21,7 +21,7 @@ module.exports = async (Client, interaction) => {
                 if (msg) msg.delete();
             });
             await thread.send({
-                content: `<@${message.author.id}>`,
+                content: `<@${message.author.id}> - <@${interaction.user.id}>`,
                 embeds: [
                     new EmbedBuilder()
                         .setColor('9bd2d2')
