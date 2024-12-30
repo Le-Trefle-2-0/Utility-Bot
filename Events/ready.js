@@ -2,11 +2,90 @@ const {SlashCommandBuilder} = require('@discordjs/builders');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder, ApplicationCommandType } = require('discord.js');
+const { scheduleJob } = require('node-schedule');
 
 module.exports = async (Client) => {
     Client.log.info('WebSocket connection to Discord has been established');
 
     Client.log.info('Starting commands publication');
+
+    function closeChannels() {
+        console.log('CLOSING CHANNELS')
+        for (let role of Object.keys(Client.settings.toClose.roles)) {
+            console.log(role)
+            let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
+            if (guild) {
+                let discordRole = guild.roles.cache.get(role);
+                if (discordRole) {
+                    console.log(Client.settings.toClose.roles[role])
+                    for (let channelID of Client.settings.toClose.roles[role]) {
+                        let channel = guild.channels.cache.get(channelID);
+                        if (channel) {
+                            switch (channel.type) {
+                                case 'GuildText':
+                                    channel.permissionOverwrites.edit(role, {
+                                        SendMessages: false,
+                                        AddReactions: false,
+                                        SendMessagesInThreads: false
+                                    });
+                                    break;
+
+                                case 'GuildVoice':
+                                    channel.permissionOverwrites.edit(role, {
+                                        Speak: false,
+                                        Stream: false,
+                                        Join: false
+                                    });
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (Client.settings.toClose.schedule) {
+        for (let weekDay of Object.keys(Client.settings.toClose.schedule)) {
+            let openTime = Client.settings.toClose.schedule[weekDay][0] || Client.settings.toClose.schedule.default[0];
+            let closeTime = Client.settings.toClose.schedule[weekDay][1] || Client.settings.toClose.schedule.default[1];
+            switch (weekDay) {
+                case 'monday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 1`, closeChannels());
+                    console.log('Scheduled close for monday')
+                    break;
+
+                case 'tuesday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 2`, closeChannels());
+                    console.log('Scheduled close for tuesday')
+                    break;
+
+                case 'wednesday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 3`, closeChannels());
+                    console.log('Scheduled close for wednesday')
+                    break;
+
+                case 'thursday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 4`, closeChannels());
+                    console.log('Scheduled close for thursday')
+                    break;
+
+                case 'friday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 5`, closeChannels());
+                    console.log('Scheduled close for friday')
+                    break;
+                
+                case 'saturday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 6`, closeChannels());
+                    break;
+
+                case 'sunday':
+                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 0`, closeChannels());
+                    console.log('Scheduled close for sun')
+                    break;
+            }
+        }
+    }
 
     // Client.musicPlayer.init(Client);
 
