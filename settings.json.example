@@ -1,0 +1,17 @@
+{
+    "toClose": {
+        "schedule": {
+            "default": ["23h56", "23h00"],
+            "monday": [],
+            "tuesday": [],
+            "wednesday": [],
+            "thursday": [],
+            "friday": [],
+            "saturday": [],
+            "sunday": []
+        },
+        "roles": {
+            "roleID": ["channelToCloseID", "channelToClose2ID..."]
+        }
+    }
+}

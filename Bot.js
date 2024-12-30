@@ -10,6 +10,7 @@ client.contextMenus = new Collection();
 client.modals = new Collection();
 // client.musicPlayer = require('./Utility/musicPlayer');
 client.algolia = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_ADMIN_KEY);
+client.settings = require('./settings.json');
 
 module.exports.login = () => {
 	client.login(process.env.SECRET_TOKEN);
