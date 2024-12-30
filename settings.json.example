@@ -11,7 +11,7 @@
             "sunday": []
         },
         "roles": {
-            "913338431076204564": ["818807139295297549"]
+            "roleID": ["channelToCloseID", "channelToClose2ID..."]
         }
     }
 }
