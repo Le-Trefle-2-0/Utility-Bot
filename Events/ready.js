@@ -160,6 +160,7 @@ module.exports = async (Client) => {
     // Client.musicPlayer.init(Client);
 
     let commands = [];
+    let guildCommands = {};
 
     Client.commands.forEach(command => {
         if (process.env.ENVIRONMENT !== "dev" && command.description?.startsWith("DEVMODE")) return;
@@ -229,7 +230,14 @@ module.exports = async (Client) => {
             }
         }
 
-        commands.push(data.toJSON());
+        if (command.guilds) {
+            command.guilds.forEach(guild => {
+                if (!guildCommands[guild]) guildCommands[guild] = [];
+                guildCommands[guild].push(data.toJSON());
+            });
+        } else {
+            commands.push(data.toJSON());
+        }
     });
 
     Client.contextMenus.forEach(menu => {
@@ -256,6 +264,13 @@ module.exports = async (Client) => {
             Routes.applicationCommands(Client.user.id),
             { body: commands }
         );
+
+        for (let i in guildCommands) {
+            await rest.put(
+                Routes.applicationGuildCommands(Client.user.id, i),
+                { body: guildCommands[i] }
+            );
+        }
     } catch (e) {
         Client.log.error(e)
     }
