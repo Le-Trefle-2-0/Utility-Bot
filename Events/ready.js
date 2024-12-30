@@ -7,7 +7,7 @@ module.exports = async (Client) => {
 
     Client.log.info('Starting commands publication');
 
-    Client.Client.closeChannels = async () => {
+    Client.closeChannels = async () => {
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
             if (guild) {
@@ -67,7 +67,7 @@ module.exports = async (Client) => {
         }
     }
 
-    Client.Client.openChannels = async () => {
+    Client.openChannels = async () => {
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
             if (guild) {
@@ -167,7 +167,7 @@ module.exports = async (Client) => {
                 .setName(command.name)
                 .setDescription(command.description || 'Aucune description');
 
-        if (command.options.length > 0) {
+        if (command.options?.length > 0) {
             for (let option of command.options) {
                 switch (option.type) {
                     case 'string':
