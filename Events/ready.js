@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 
@@ -65,6 +65,11 @@ module.exports = async (Client) => {
                 }
             }
         }
+
+        Client.user.setPresence({
+            activities: [ { name: 'le ciel étoilé ✨', type: ActivityType.Watching } ],
+            status: PresenceUpdateStatus.Idle
+        })
     }
 
     Client.openChannels = async () => {
@@ -112,6 +117,10 @@ module.exports = async (Client) => {
                 }
             }
         }
+        Client.user.setPresence({
+            activities: [ { name: '🍀 Regarde les trèfles pousser', type: ActivityType.Custom } ],
+            status: PresenceUpdateStatus.Online
+        })
     }
 
     if (Client.settings.toClose.schedule) {
