@@ -1,0 +1,17 @@
+{
+    "toClose": {
+        "schedule": {
+            "default": ["23h56", "23h00"],
+            "monday": [],
+            "tuesday": [],
+            "wednesday": [],
+            "thursday": [],
+            "friday": [],
+            "saturday": [],
+            "sunday": []
+        },
+        "roles": {
+            "913338431076204564": ["818807139295297549"]
+        }
+    }
+}
