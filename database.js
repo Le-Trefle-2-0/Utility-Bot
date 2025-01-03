@@ -42,4 +42,28 @@ module.exports = async (Client) => {
             allowNull: false
         },
     }).sync({ alter: true });
+
+    Client.Timeouts = await Client.db.define('timeouts', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userId: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        guildId: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        reason: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        duration: {
+            type: sequelize.STRING,
+            allowNull: false
+        }
+    }).sync({ alter: true });
 }
