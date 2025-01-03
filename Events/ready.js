@@ -1,8 +1,9 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus, disableValidators } = require('discord.js');
 const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 
 module.exports = async (Client) => {
+    disableValidators();
     Client.log.info('WebSocket connection to Discord has been established');
 
     Client.log.info('Starting commands publication');
