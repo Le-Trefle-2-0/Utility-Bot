@@ -61,7 +61,43 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: false
         },
-        duration: {
+        startTimestamp: {
+            type: sequelize.INTEGER,
+            allowNull: false
+        },
+        endTimestamp: {
+            type: sequelize.INTEGER,
+            allowNull: false
+        }
+    }).sync({ alter: true });
+
+    Client.ModLogs = await Client.db.define('modlogs', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userId: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        guildId: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        moderatorId: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        reason: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        timestamp: {
+            type: sequelize.INTEGER,
+            allowNull: false
+        },
+        type: {
             type: sequelize.STRING,
             allowNull: false
         }
