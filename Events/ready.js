@@ -15,7 +15,7 @@ module.exports = async (Client) => {
 
     let timeouts = await Client.Timeouts.findAll();
     for (let timeout of timeouts) {
-        let member = await Client.guilds.cache.get(timeout.guildId).members.fetch(timeout.userId);
+        let member = await Client.guilds.cache.get(timeout.guildID).members.fetch(timeout.userID);
         if (member) {
             let duration = timeout.endTimestamp - Date.now();
             scheduleJob(new Date(Date.now() + duration), () => {
@@ -47,7 +47,7 @@ module.exports = async (Client) => {
                             })
                     ]
                 });
-                Client.Timeouts.destroy({ where: { userId: timeout.userId, guildId: timeout.guildId } });
+                Client.Timeouts.destroy({ where: { userId: timeout.userID, guildId: timeout.guildID } });
             });
         }
     }

@@ -13,17 +13,17 @@ module.exports = async (Client, interaction) => {
     let member = await interaction.guild.members.fetch(userId);
     if (member) {
         await Client.Timeouts.create({
-            userId: userId,
-            guildId: interaction.guild.id,
+            userID: userId,
+            guildID: interaction.guild.id,
             reason: reason,
             startTimestamp: Date.now(),
             endTimestamp: (Date.now() + durationTimestamp)
         });
 
         await Client.ModLogs.create({
-            userId: userId,
-            guildId: interaction.guild.id,
-            moderatorId: interaction.user.id,
+            userID: userId,
+            guildID: interaction.guild.id,
+            moderatorID: interaction.user.id,
             reason: reason,
             timestamp: Date.now(),
             type: 'timeout'
@@ -42,7 +42,7 @@ module.exports = async (Client, interaction) => {
                         })
                 ]
             });
-            Client.Timeouts.destroy({ where: { userId: userId, guildId: interaction.guild.id } });
+            Client.Timeouts.destroy({ where: { userID: userId, guildID: interaction.guild.id } });
         });
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             for (let channelID of Client.settings.toClose.roles[role]) {

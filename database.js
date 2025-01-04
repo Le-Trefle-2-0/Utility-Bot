@@ -49,11 +49,11 @@ module.exports = async (Client) => {
             primaryKey: true,
             autoIncrement: true
         },
-        userId: {
+        userID: {
             type: sequelize.STRING,
             allowNull: false
         },
-        guildId: {
+        guildID: {
             type: sequelize.STRING,
             allowNull: false
         },
@@ -77,15 +77,15 @@ module.exports = async (Client) => {
             primaryKey: true,
             autoIncrement: true
         },
-        userId: {
+        userID: {
             type: sequelize.STRING,
             allowNull: false
         },
-        guildId: {
+        guildID: {
             type: sequelize.STRING,
             allowNull: false
         },
-        moderatorId: {
+        moderatorID: {
             type: sequelize.STRING,
             allowNull: false
         },
