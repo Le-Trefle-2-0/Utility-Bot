@@ -13,6 +13,45 @@ module.exports = async (Client) => {
         status: PresenceUpdateStatus.Online
     })
 
+    let timeouts = await Client.Timeouts.findAll();
+    for (let timeout of timeouts) {
+        let member = await Client.guilds.cache.get(timeout.guildId).members.fetch(timeout.userId);
+        if (member) {
+            let duration = timeout.endTimestamp - Date.now();
+            scheduleJob(new Date(Date.now() + duration), () => {
+                for (let role of Object.keys(Client.settings.toClose.roles)) {
+                    for (let channelID of Client.settings.toClose.roles[role]) {
+                        let channel = member.guild.channels.cache.get(channelID);
+                        if (channel) {
+                            switch (channel.type) {
+                                case 0:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+        
+                                case 2:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+                            }
+                        }
+                    }
+                }
+                member.user.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor('9bd2d2')
+                            .setTitle('Exclusion temporaire')
+                            .setDescription(`Votre exclusion temporaire du serveur **${member.guild.name}** a pris fin.`)
+                            .setAuthor({
+                                name: member.guild.name,
+                                iconURL: member.guild.iconURL({ dynamic: true })
+                            })
+                    ]
+                });
+                Client.Timeouts.destroy({ where: { userId: timeout.userId, guildId: timeout.guildId } });
+            });
+        }
+    }
+
     Client.closeChannels = async () => {
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
