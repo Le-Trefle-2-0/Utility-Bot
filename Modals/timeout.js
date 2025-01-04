@@ -36,10 +36,6 @@ module.exports = async (Client, interaction) => {
                         .setColor('9bd2d2')
                         .setTitle('Exclusion temporaire')
                         .setDescription(`Votre exclusion temporaire du serveur **${interaction.guild.name}** a pris fin.`)
-                        .addFields({
-                            name: 'Motif',
-                            value: reason
-                        })
                         .setAuthor({
                             name: interaction.guild.name,
                             iconURL: interaction.guild.iconURL({ dynamic: true })
@@ -100,11 +96,13 @@ module.exports = async (Client, interaction) => {
                     .addFields(
                         {
                             name: 'Motif',
-                            value: reason
+                            value: reason,
+                            inline: true
                         },
                         {
                             name: 'Durée',
-                            value: duration
+                            value: `${duration} (fin <t:${Math.round(new Date(Date.now() + durationTimestamp).getTime()/1000)}:R>)`,
+                            inline: true
                         }
                     )
                     .setAuthor({
