@@ -27,7 +27,7 @@ module.exports = {
             });
         }
 
-        historic = historic.sort((a, b) => b.openTimestamp - a.openTimestamp);
+        historic = historic.sort((a, b) => b.timestamp - a.timestamp);
 
         let string = '';
         let array = [];
@@ -47,7 +47,7 @@ module.exports = {
                 embeds.push(
                     new EmbedBuilder()
                         .setColor('9bd2d2')
-                        .setTitle(`Historique d'écoute ${user ? `de ${user.displayName}` : 'sur 12h'}`)
+                        .setTitle(`Historique de modération de ${user.displayName}`)
                         .setDescription(array[i])
                         .setFooter({text: `Page ${i+1}/${array.length}`})
                 );
