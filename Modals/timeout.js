@@ -1,9 +1,9 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, MessageFlags } = require("discord.js");
 const ms = require('ms')
 const { scheduleJob } = require('node-schedule');
 
 module.exports = async (Client, interaction) => {
-    await interaction.deferReply({ emphemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     let reason = interaction.fields.getTextInputValue('reason');
     let duration = interaction.fields.getTextInputValue('duration');
@@ -102,8 +102,9 @@ module.exports = async (Client, interaction) => {
                     })
             ]
         });
-        interaction.editReply({ content: ':white_check_mark: Utilisateur exclu temporairement', emphemeral: true });
+        let message = await interaction.followUp({ content: ':white_check_mark: Utilisateur exclu temporairement', flags: MessageFlags.Ephemeral });
+        message.delete();
     } else {
-        interaction.editReply({ content: ':x: Utilisateur introuvable', emphemeral: true });
+        interaction.followUp({ content: ':x: Utilisateur introuvable', flags: MessageFlags.Ephemeral });
     }
 }

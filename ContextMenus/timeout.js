@@ -1,9 +1,11 @@
-const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 
 module.exports = {
     name: '🔇 Timeout',
     type: 'user',
     run: async (Client, interaction) => {
+        let previousTimeout = await Client.Timeouts.findOne({ where: { userID: interaction.targetUser.id, guildID: interaction.guild.id } });
+        if (previousTimeout) return interaction.reply({ content: ':x: Cet utilisateur est déjà exclu temporairement', flags: MessageFlags.Ephemeral });
         const modal = new ModalBuilder()
             .setCustomId('timeout')
             .setTitle('Exclusion temporaire')
