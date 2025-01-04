@@ -57,12 +57,7 @@ module.exports = async (Client, interaction) => {
                                 AddReactions: false
                             });
                             scheduleJob(new Date(Date.now() + durationTimestamp), async () => {
-                                channel.permissionOverwrites.delete(member, {
-                                    SendMessages: true,
-                                    AddReactions: true,
-                                    SendMessagesInThreads: true,
-                                    AddReactions: true
-                                });
+                                channel.permissionOverwrites.delete(member);
                             });
                             break;
 
@@ -73,11 +68,7 @@ module.exports = async (Client, interaction) => {
                                 Connect: false
                             });
                             scheduleJob(new Date(Date.now() + durationTimestamp), async () => {
-                                channel.permissionOverwrites.delete(member, {
-                                    Speak: true,
-                                    SendMessages: true,
-                                    Connect: true
-                                });
+                                channel.permissionOverwrites.delete(member);
                             });
                             channel.members.forEach(voiceMember => {
                                 if (member.id == voiceMember.id) voiceMember.voice.disconnect();
