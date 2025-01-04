@@ -8,6 +8,11 @@ module.exports = async (Client) => {
 
     Client.log.info('Starting commands publication');
 
+    Client.user.setPresence({
+        activities: [ { name: '🍀 Regarde les trèfles pousser', type: ActivityType.Custom } ],
+        status: PresenceUpdateStatus.Online
+    })
+
     Client.closeChannels = async () => {
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
