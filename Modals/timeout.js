@@ -20,6 +20,15 @@ module.exports = async (Client, interaction) => {
             endTimestamp: (Date.now() + durationTimestamp)
         });
 
+        await Client.ModLogs.create({
+            userId: userId,
+            guildId: interaction.guild.id,
+            moderatorId: interaction.user.id,
+            reason: reason,
+            timestamp: Date.now(),
+            type: 'timeout'
+        });
+
         scheduleJob(new Date(Date.now() + durationTimestamp), () => {
             member.user.send({
                 embeds: [
