@@ -26,7 +26,7 @@ module.exports = async (Client, interaction) => {
             moderatorID: interaction.user.id,
             reason: reason,
             timestamp: Date.now(),
-            type: 'timeout'
+            type: 'Timeout'
         });
 
         scheduleJob(new Date(Date.now() + durationTimestamp), () => {
