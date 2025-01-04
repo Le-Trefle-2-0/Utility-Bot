@@ -1,7 +1,7 @@
 const { ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
 module.exports = {
-    name: 'Timeout',
+    name: '🔇 Timeout',
     type: 'user',
     run: async (Client, interaction) => {
         const modal = new ModalBuilder()
