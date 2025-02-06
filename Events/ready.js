@@ -1,11 +1,90 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus, disableValidators } = require('discord.js');
 const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 
 module.exports = async (Client) => {
+    disableValidators();
     Client.log.info('WebSocket connection to Discord has been established');
 
     Client.log.info('Starting commands publication');
+
+    Client.user.setPresence({
+        activities: [ { name: '🍀 Regarde les trèfles pousser', type: ActivityType.Custom } ],
+        status: PresenceUpdateStatus.Online
+    })
+
+    let timeouts = await Client.Timeouts.findAll();
+    for (let timeout of timeouts) {
+        let member = await Client.guilds.cache.get(timeout.guildID).members.fetch(timeout.userID);
+        if (member) {
+            if (timeout.endTimestamp < Date.now()) {
+                for (let role of Object.keys(Client.settings.toClose.roles)) {
+                    for (let channelID of Client.settings.toClose.roles[role]) {
+                        let channel = member.guild.channels.cache.get(channelID);
+                        if (channel) {
+                            switch (channel.type) {
+                                case 0:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+        
+                                case 2:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                member.user.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor('9bd2d2')
+                            .setTitle('Exclusion temporaire')
+                            .setDescription(`Votre exclusion temporaire du serveur **${member.guild.name}** a pris fin.`)
+                            .setAuthor({
+                                name: member.guild.name,
+                                iconURL: member.guild.iconURL({ dynamic: true })
+                            })
+                    ]
+                });
+                
+                Client.Timeouts.destroy({ where: { userId: timeout.userID, guildId: timeout.guildID } });
+                continue;
+            }
+            let duration = timeout.endTimestamp - Date.now();
+            scheduleJob(new Date(Date.now() + duration), () => {
+                for (let role of Object.keys(Client.settings.toClose.roles)) {
+                    for (let channelID of Client.settings.toClose.roles[role]) {
+                        let channel = member.guild.channels.cache.get(channelID);
+                        if (channel) {
+                            switch (channel.type) {
+                                case 0:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+        
+                                case 2:
+                                    channel.permissionOverwrites.delete(member);
+                                    break;
+                            }
+                        }
+                    }
+                }
+                member.user.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor('9bd2d2')
+                            .setTitle('Exclusion temporaire')
+                            .setDescription(`Votre exclusion temporaire du serveur **${member.guild.name}** a pris fin.`)
+                            .setAuthor({
+                                name: member.guild.name,
+                                iconURL: member.guild.iconURL({ dynamic: true })
+                            })
+                    ]
+                });
+                Client.Timeouts.destroy({ where: { userId: timeout.userID, guildId: timeout.guildID } });
+            });
+        }
+    }
 
     Client.closeChannels = async () => {
         for (let role of Object.keys(Client.settings.toClose.roles)) {
@@ -65,6 +144,11 @@ module.exports = async (Client) => {
                 }
             }
         }
+
+        Client.user.setPresence({
+            activities: [ { name: 'le ciel étoilé ✨', type: ActivityType.Watching } ],
+            status: PresenceUpdateStatus.Idle
+        })
     }
 
     Client.openChannels = async () => {
@@ -112,6 +196,10 @@ module.exports = async (Client) => {
                 }
             }
         }
+        Client.user.setPresence({
+            activities: [ { name: '🍀 Regarde les trèfles pousser', type: ActivityType.Custom } ],
+            status: PresenceUpdateStatus.Online
+        })
     }
 
     if (Client.settings.toClose.schedule) {

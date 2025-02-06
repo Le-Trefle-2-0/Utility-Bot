@@ -3,6 +3,7 @@ const { EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, Ac
 
 module.exports = {
     description: 'DEVMODE Ouvre un ticket',
+    guilds: [process.env.MAIN_GUILD_ID],
     options: [],
     run: (Client, interaction) => {
         let row = new ActionRowBuilder().addComponents(
