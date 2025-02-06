@@ -1,0 +1,16 @@
+[
+  [
+    "discord errors"
+  ],
+  [
+    {
+      "code": "21",
+      "message": "Algolia app ID not specified. Please fill in .env completely."
+    },
+    {
+      "code": "22",
+      "message": "Algolia admin key not specified. Please fill in .env completely."
+    },
+    "algolia errors"
+  ]
+]
