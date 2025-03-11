@@ -41,6 +41,10 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: false
         },
+        assignedRoleID: {
+            type: sequelize.STRING,
+            allowNull: false
+        }
     }).sync({ alter: true });
 
     Client.Timeouts = await Client.db.define('timeouts', {

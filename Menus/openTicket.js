@@ -15,7 +15,7 @@ module.exports = async (Client, interaction) => {
     let mainGuild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
     if (mainGuild) {
         let role = await mainGuild.roles.fetch(team);
-        let parent = await mainGuild.channels.fetch(process.env.TICKETS_CATEGORY_ID);
+        let parent = await mainGuild.channels.fetch(Client.settings.tickets.categoryID);
 
         let ticketChannel = await mainGuild.channels.create({
             name: `ticket-${interaction.user.displayName}`,
@@ -31,14 +31,16 @@ module.exports = async (Client, interaction) => {
                 },
                 {
                     id: role,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
                 }
             ]
         });
 
         await Client.Tickets.create({
             userID: interaction.user.id,
-            channelID: ticketChannel.id
+            channelID: ticketChannel.id,
+            assignedRoleID: role.id,
         });
 
         let ticketEmbed = new EmbedBuilder()
@@ -47,6 +49,16 @@ module.exports = async (Client, interaction) => {
             .setTimestamp();
 
         let row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('takeTicket')
+                .setLabel('Prendre en charge')
+                .setStyle(2),
+
+            new ButtonBuilder()
+                .setCustomId('transferTicket')
+                .setLabel('Transférer')
+                .setStyle(2),
+
             new ButtonBuilder()
                 .setCustomId('closeTicket')
                 .setLabel('Fermer le ticket')
