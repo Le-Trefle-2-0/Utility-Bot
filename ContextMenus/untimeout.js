@@ -4,7 +4,6 @@ module.exports = {
     name: 'Untimeout',
     type: 'user',
     run: async (Client, interaction) => {
-        console.log('untimout');
         let previousTimeout = await Client.Timeouts.findOne({ where: { userID: interaction.targetUser.id, guildID: interaction.guild.id } });
         if (!previousTimeout) return interaction.reply({ content: ':x: Cet utilisateur n\'est pas exclu temporairement', flags: MessageFlags.Ephemeral });
         
@@ -16,7 +15,7 @@ module.exports = {
                         case 0:
                             channel.permissionOverwrites.delete(interaction.targetUser.id);
                             break;
-                        case 5:
+                        case 2:
                             channel.permissionOverwrites.delete(interaction.targetUser.id);
                             break;
                     }

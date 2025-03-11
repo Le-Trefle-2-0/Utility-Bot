@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = async (Client, interaction) => {
     if (!Client.pages) return interaction.reply({
@@ -6,7 +6,7 @@ module.exports = async (Client, interaction) => {
             new EmbedBuilder()
                 .setColor('db3226')
                 .setDescription(':x: | Ce navigateur a expiré, merci de recommencer.')
-        ], ephemeral: true
+        ], flags: MessageFlags.Ephemeral
     });
 
     let pager = Client.pages[interaction.message.id];
@@ -16,7 +16,7 @@ module.exports = async (Client, interaction) => {
             new EmbedBuilder()
                 .setColor('db3226')
                 .setDescription(':x: | Ce navigateur a expiré, merci de recommencer.')
-        ], ephemeral: true
+        ], flags: MessageFlags.Ephemeral
     });
 
     pager.pageNumber++;
