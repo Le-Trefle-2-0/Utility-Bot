@@ -29,9 +29,9 @@ module.exports = async (Client) => {
 
     Client.Tickets = await Client.db.define('tickets', {
         id: {
-            type: sequelize.INTEGER,
+            type: sequelize.UUID,
             primaryKey: true,
-            autoIncrement: true
+            defaultValue: sequelize.UUIDV4
         },
         userID: {
             type: sequelize.STRING,
