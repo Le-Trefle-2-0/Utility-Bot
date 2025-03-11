@@ -1,4 +1,4 @@
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+ const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { Op } = require('sequelize');
 const ms = require('ms');
 const { scheduleJob } = require('node-schedule');
