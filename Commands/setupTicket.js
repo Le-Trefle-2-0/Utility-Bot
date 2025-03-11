@@ -1,5 +1,5 @@
 const { ButtonBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
+const { EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, MessageFlags} = require('discord.js');
 
 module.exports = {
     description: 'DEVMODE Ouvre un ticket',
@@ -24,7 +24,7 @@ module.exports = {
 
         interaction.reply({
             content: 'OK',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

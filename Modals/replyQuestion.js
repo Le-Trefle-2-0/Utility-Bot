@@ -1,4 +1,4 @@
-const { ThreadAutoArchiveDuration, EmbedBuilder } = require("discord.js");
+const { ThreadAutoArchiveDuration, EmbedBuilder, MessageFlags} = require("discord.js");
 
 module.exports = async (Client, interaction) => {
     let question = interaction.fields.getTextInputValue('question');
@@ -9,7 +9,7 @@ module.exports = async (Client, interaction) => {
     if (message) {
         interaction.reply({
             content: 'Réponse en cours d\'envoi...',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         message.startThread({
@@ -51,13 +51,13 @@ module.exports = async (Client, interaction) => {
 
             interaction.editReply({
                 content: 'Réponse envoyée !',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         });
     } else {
         interaction.reply({
             content: 'Impossible de trouver le message',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
