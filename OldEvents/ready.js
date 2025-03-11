@@ -1,6 +1,8 @@
 const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus, disableValidators } = require('discord.js');
 const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
+const { Op } = require('sequelize');
+const ms = require('ms');
 
 module.exports = async (Client) => {
     disableValidators();
@@ -47,7 +49,7 @@ module.exports = async (Client) => {
                             })
                     ]
                 });
-                
+
                 Client.Timeouts.destroy({ where: { userId: timeout.userID, guildId: timeout.guildID } });
                 continue;
             }
@@ -83,6 +85,77 @@ module.exports = async (Client) => {
                 });
                 Client.Timeouts.destroy({ where: { userId: timeout.userID, guildId: timeout.guildID } });
             });
+        }
+    }
+
+    let softbans = await Client.ModLogs.findAll({ 
+        where: { 
+            type: {
+                [Op.startsWith]: 'Softban'
+            }
+        } 
+    });
+
+    for (let softban of softbans) {
+        let member = await Client.guilds.cache.get(softban.guildID).members.fetch(softban.userID);
+        if (member) {
+            let memberSoftbans = await Client.ModLogs.findAll({
+                where: {
+                    userID: softban.userID,
+                    guildID: softban.guildID,
+                    type: {
+                        [Op.startsWith]: 'Softban'
+                    }
+                }
+            });
+
+            let softbanCount = memberSoftbans.length;
+            let isLatest = true;
+            // check if the softban is the latests
+            for (let memberSoftban of memberSoftbans) {
+                if (memberSoftban.timestamp > softban.timestamp) {
+                    isLatest = false;
+                }
+            }
+
+            if (isLatest) {
+                let durations = ['7d', '30d', '365d', '36500d'];
+                let newDuration = durations[softbanCount];
+                for (let role of Object.keys(Client.settings.toClose.roles)) {
+                    for (let channelID of Client.settings.toClose.roles[role]) {
+                        let channel = member.guild.channels.cache.get(channelID);
+                        if (channel) {
+                            switch (channel.type) {
+                                case 0:
+                                    scheduleJob(new Date(Date.now() + ms(newDuration)), async () => {
+                                        channel.permissionOverwrites.delete(member);
+                                    });
+                                    break;
+                
+                                case 2:
+                                    scheduleJob(new Date(Date.now() + ms(newDuration)), async () => {
+                                        channel.permissionOverwrites.delete(member);
+                                    });
+                                    break;
+                            }
+                        }
+                    }
+                }
+                scheduleJob(new Date(Date.now() + ms(newDuration)), async () => {
+                    member.send({
+                        embeds: [
+                            new EmbedBuilder()
+                                .setColor('9bd2d2')
+                                .setTitle('Softban')
+                                .setDescription(`Votre softban du serveur **${member.guild.name}** s'est terminé.`)
+                                .setAuthor({
+                                    name: member.guild.name,
+                                    iconURL: member.guild.iconURL({ dynamic: true })
+                                })
+                        ]
+                    });
+                });
+            }
         }
     }
 
