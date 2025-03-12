@@ -41,13 +41,13 @@ module.exports = async (Client, interaction) => {
                     answer: reply,
                     threadLink: thread.url
                 }]
-            })
+            });
 
             Client.Questions.create({
                 question: question,
                 answer: reply,
                 threadLink: thread.url
-            })
+            });
 
             interaction.editReply({
                 content: 'Réponse envoyée !',
