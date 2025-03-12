@@ -4,6 +4,6 @@ require('./Utility/StartCheck')();
 const Client = require('./Bot').login();
 Client.log = require('./Utility/console');
 
-require('./database')(Client);
 require('./Handlers/initHandlers')(Client);
+require('./database')(Client);
 require('./server');
