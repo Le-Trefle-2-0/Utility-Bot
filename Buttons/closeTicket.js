@@ -49,7 +49,7 @@ module.exports = async (Client, interaction) => {
             embeds: [
                 new EmbedBuilder()
                     .setColor('9bd2d2')
-                    .setDescription(`**Cloture de ticket**\n\nID : \`${ticket.id}\`\nÉquipe en charge : <@&${ticket.assignedRoleID}>\nFermé par : <@${interaction.user.id}>`)
+                    .setDescription(`**Cloture de ticket**\n\nID : \`${ticket.id}\`\nOuvert par : <@${ticket.userID}>\nÉquipe en charge : <@&${ticket.assignedRoleID}>\nFermé par : <@${interaction.user.id}>`)
             ], components: row
         });
 
