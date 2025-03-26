@@ -4,7 +4,7 @@ module.exports = async (Client, interaction) => {
     await interaction.deferUpdate({ ephemeral: true });
     let team = interaction.values;
 
-    let ticket = await Client.Tickets.findOne({ where: { userID: interaction.user.id } });
+    let ticket = await Client.Tickets.findOne({ where: { channelID: interaction.channel.id } });
     if (!ticket) {
         return interaction.editReply({
             content: `:x: | Erreur lors du transfert, merci de le signaler`
