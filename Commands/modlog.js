@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     description: 'Afficher l\'historique de modération',
@@ -12,7 +12,7 @@ module.exports = {
     ],
     guilds: [process.env.MAIN_GUILD_ID],
     run: async (Client, interaction) => {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         let user = interaction.options.getMember('utilisateur');
 
         let historic = await Client.ModLogs.findAll({ where: { userId: user.id }});

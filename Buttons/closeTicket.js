@@ -1,4 +1,6 @@
 const transcript = require('discord-html-transcripts');
+const { createWriteStream } = require('fs');
+const {EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require("discord.js");
 
 module.exports = async (Client, interaction) => {
     await interaction.deferReply();
@@ -19,21 +21,36 @@ module.exports = async (Client, interaction) => {
 
         const file = await transcript.createTranscript(interaction.channel, {
             limit: -1,
-            returnType: 'attachment',
-            filename: `transcript-${user.displayName}.html`,
+            returnType: 'buffer',
+            filename: `${ticket.id}.html`,
             saveImages: true,
             footerText: 'Transcript confidentiel - Le Trèfle 2.0 - Tout repartage contrevient au règlement intérieur de l\'association.',
             poweredBy: false,
         });
 
+        createWriteStream(`./Transcripts/${ticket.id}.html`).write(file);
+
+        let row = [
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Link)
+                    .setLabel('Transcript')
+                    .setURL(`http://cdn.letrefle.org/transcript/${ticket.id}`)
+            )
+        ]
+
         user.send({
-            content: `:white_check_mark: | Votre ticket a été fermé. Voici le transcript de votre ticket :`,
-            files: [file]
+            content: `:white_check_mark: | Votre ticket a été fermé.`,
+            components: row
         });
 
         let transcriptChannel = await interaction.guild.channels.fetch(process.env.TRANSCRIPTS_CHANNEL_ID);
         transcriptChannel.send({
-            files: [file]
+            embeds: [
+                new EmbedBuilder()
+                    .setColor('9bd2d2')
+                    .setDescription(`**Cloture de ticket**\n\nID : \`${ticket.id}\`\nOuvert par : <@${ticket.userID}>\nÉquipe en charge : <@&${ticket.assignedRoleID}>\nFermé par : <@${interaction.user.id}>`)
+            ], components: row
         });
 
         setTimeout(() => {

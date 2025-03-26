@@ -3,6 +3,7 @@
 // const {joinVoiceChannel, VoiceConnection} = require('@discordjs/voice');
 // const ytsearch = require('youtube-sr').default;
 
+const {MessageFlags} = require("discord.js");
 module.exports = {
     description: 'Joue une musique',
     options: [
@@ -56,7 +57,7 @@ module.exports = {
             });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         let search = await ytsearch.search(interaction.options.getString('recherche'), { limit: 1 });
         
         let serverQueue = Client.queue.get(interaction.guild.id);

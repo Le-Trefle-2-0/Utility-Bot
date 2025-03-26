@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, MessageFlags} = require("discord.js");
 
 module.exports = async (Client, interaction) => {
     let question = interaction.fields.getTextInputValue('question');
@@ -6,7 +6,7 @@ module.exports = async (Client, interaction) => {
     if (!question) {
         return interaction.reply({
             content: 'Veuillez entrer une question',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -42,7 +42,7 @@ module.exports = async (Client, interaction) => {
         return interaction.reply({
             content: 'Quelle équipe souhaitez-vous contacter ?\nEn cas de doute, merci de contacter notre équipe de guides.',
             components: [row],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         })
     } else {
         let string = '';
@@ -55,7 +55,7 @@ module.exports = async (Client, interaction) => {
                 new EmbedBuilder()
                     .setColor('9bd2d2')
                     .setDescription(`Il semblerait que votre question ait déjà été posée. Voici les résultats trouvés :\n\n${string}\nSi aucun de ces résultats ne répond à votre question, veuillez sélectionner une équipe ci-dessous. En cas de doute, merci de contacter notre équipe de guides.\nEn ouvrant un ticket, vous certifiez avoir consulté les résultats proposés ci-dessus ainsi que la <#960639230818807909>.`)
-            ], components: [row], ephemeral: true
+            ], components: [row], flags: MessageFlags.Ephemeral
         });
     }
 }

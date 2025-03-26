@@ -107,3 +107,4 @@ dist
 .eslintrc.json
 database.sqlite
 settings.json
+/.idea/

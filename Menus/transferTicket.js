@@ -1,7 +1,7 @@
-const { ChannelType, PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js');
+const { ChannelType, PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageFlags} = require('discord.js');
 
 module.exports = async (Client, interaction) => {
-    await interaction.deferUpdate({ ephemeral: true });
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
     let team = interaction.values;
 
     let ticket = await Client.Tickets.findOne({ where: { channelID: interaction.channel.id } });
