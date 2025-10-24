@@ -156,14 +156,20 @@ module.exports = async (Client, interaction) => {
         const deleteResult = await deleteChannelWithRetry(interaction.channel);
 
         if (!deleteResult.success) {
-            ticketsLogger.logError('channelDeletion', deleteResult.error);
-            console.error('Channel deletion failed after retries:', deleteResult.error);
+            const error = deleteResult.error;
+            ticketsLogger.logError('channelDeletion', error);
+            console.error('Channel deletion failed after retries:');
+            console.error('- Error code:', error?.code || 'Unknown');
+            console.error('- Error message:', error?.message || 'No message');
+            console.error('- Status:', error?.status || 'Unknown');
 
             // Essayer de notifier que la suppression a échoué
             try {
-                const deleteMessage = `⚠️ | Le canal n'a pas pu être supprimé automatiquement. Erreur: ${deleteResult.error.code}. Suppression manuelle requise.`;
+                const errorCode = error?.code || error?.status || 'UNKNOWN_ERROR';
+                const errorMessage = error?.message || 'Erreur inconnue';
+                const deleteMessage = `⚠️ | Le canal n'a pas pu être supprimé automatiquement après 3 tentatives.\n\nCode: ${errorCode}\nMessage: ${errorMessage}\n\nVérifications requises:\n1. Le bot a-t-il la permission "Manage Channels" ?\n2. Est-il muted sur le serveur ?\n3. Y a-t-il un problème d'API Discord ?`;
 
-                // Envoyer le message avant que le canal soit peut-être supprimé
+                // Envoyer le message au canal des transcripts
                 const transcriptChannelID = ticketsConfig.getTranscriptChannelID();
                 if (transcriptChannelID) {
                     const transcriptChannel = await interaction.guild.channels.fetch(transcriptChannelID);
@@ -172,7 +178,8 @@ module.exports = async (Client, interaction) => {
                         embeds: [
                             new EmbedBuilder()
                                 .setColor('ff6b6b')
-                                .setDescription(`Ticket ID: \`${ticket.id}\`\nCanal: <#${interaction.channel.id}>`)
+                                .setTitle('⚠️ Erreur de suppression de canal')
+                                .setDescription(`Ticket ID: \`${ticket.id}\`\nCanal: <#${interaction.channel.id}>\n\nSuppression manuelle requise.`)
                         ]
                     });
                 }
