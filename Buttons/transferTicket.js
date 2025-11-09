@@ -1,66 +1,91 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
-    MessageFlags
-} = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, MessageFlags } = require('discord.js');
+const ticketsConfig = require('../config/ticketsConfig');
 
 module.exports = async (Client, interaction) => {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const ticket = await Client.Tickets.findOne({
-        where: {
-            channelID: interaction.channel.id
+
+    try {
+        const ticket = await Client.Tickets.findOne({
+            where: { channelID: interaction.channel.id }
+        });
+
+        if (!ticket) {
+            return interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription(':x: | Il semblerait que ce salon ne soit pas un ticket.')
+                        .setColor('Red')
+                ]
+            });
         }
-    });
 
-    if (!ticket) return interaction.editReply({
-        embeds: [
-            new EmbedBuilder()
-                .setDescription(':x: | Il semblerait que ce salon ne soit pas un ticket.')
-        ]
-    });
+        // Vérifier que l'utilisateur a un rôle de l'équipe assignée
+        const currentTeamRoles = ticketsConfig.getTeamRoles(ticket.assignedTeam);
+        const hasTeamRole = currentTeamRoles.some(roleID => interaction.member.roles.cache.has(roleID));
 
-    let assignedRole = interaction.guild.roles.cache.get(ticket.assignedRoleID);
-
-    if (!assignedRole) return interaction.editReply({
-        embeds: [
-            new EmbedBuilder()
-                .setDescription(':x: | Erreur lors de la demande de transfert, merci de le signaler.')
-                .setColor('Red')
-        ]
-    });
-
-    if (!interaction.member.roles.cache.has(ticket.assignedRoleID)) return interaction.editReply({
-        embeds: [
-            new EmbedBuilder()
-                .setDescription(':x: | Votre rôle ne permet pas d\'effectuer cette action.')
-                .setColor('Red')
-        ]
-    });
-
-    let selector = new StringSelectMenuBuilder()
-        .setCustomId('transferTicket')
-        .setPlaceholder('Sélectionnez une option');
-
-    let options = [];
-    for (let role of Client.settings.tickets.roles) {
-        if (role.roleID !== ticket.assignedRoleID) {
-            options.push(
-                new StringSelectMenuOptionBuilder()
-                    .setLabel(role.name)
-                    .setValue(role.roleID)
-                    .setDescription(`Transférer à l'équipe de ${role.name}`)
-                    .setEmoji(role.emojiID)
-            )
+        if (!hasTeamRole) {
+            return interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription(`:x: | Vous n'avez pas les rôles requis pour transférer ce ticket.`)
+                        .setColor('Red')
+                ]
+            });
         }
+
+        // Créer le menu de sélection des équipes (sauf celle actuelle)
+        const selector = new StringSelectMenuBuilder()
+            .setCustomId('transferTicket')
+            .setPlaceholder('Sélectionnez l\'équipe de destination');
+
+        const options = [];
+        const allTeams = ticketsConfig.getAllTeams();
+
+        for (const team of allTeams) {
+            if (team.name !== ticket.assignedTeam) {
+                const option = new StringSelectMenuOptionBuilder()
+                    .setLabel(team.name)
+                    .setValue(team.name)
+                    .setDescription(`Transférer à l'équipe de ${team.name}`);
+
+                if (team.emojiID) {
+                    option.setEmoji(team.emojiID);
+                }
+
+                options.push(option);
+            }
+        }
+
+        if (options.length === 0) {
+            return interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription(':x: | Aucune autre équipe disponible pour le transfert.')
+                        .setColor('Red')
+                ]
+            });
+        }
+
+        selector.addOptions(options);
+        const row = new ActionRowBuilder().addComponents(selector);
+
+        interaction.editReply({
+            embeds: [
+                new EmbedBuilder()
+                    .setDescription('📨 | Vers quelle équipe souhaitez-vous transférer ce ticket ?')
+                    .setColor('9bd2d2')
+            ],
+            components: [row]
+        });
+
+    } catch (error) {
+        console.error('Error in transferTicket button:', error);
+        interaction.editReply({
+            embeds: [
+                new EmbedBuilder()
+                    .setDescription(`:x: | Erreur: ${error.message}`)
+                    .setColor('Red')
+            ]
+        });
     }
-
-    selector.addOptions(options);
-
-    let row = new ActionRowBuilder().addComponents(selector)
-
-    interaction.editReply({
-        embeds: [
-            new EmbedBuilder()
-                .setDescription('📨 | Vers quelle équipe souhaitez-vous transférer ce ticket ?')
-                .setColor('9bd2d2')
-        ], components: [row]
-    })
 }

@@ -39,16 +39,45 @@ module.exports = async (Client) => {
         },
         userID: {
             type: sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
         },
         channelID: {
             type: sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true,
+            validate: {
+                notEmpty: true
+            }
         },
-        assignedRoleID: {
+        assignedTeam: {
             type: sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
+        },
+        createdAt: {
+            type: sequelize.DATE,
+            allowNull: false,
+            defaultValue: sequelize.NOW
+        },
+        closedAt: {
+            type: sequelize.DATE,
+            allowNull: true
+        },
+        closedBy: {
+            type: sequelize.STRING,
+            allowNull: true
         }
+    }, {
+        indexes: [
+            { fields: ['userID'] },
+            { fields: ['assignedTeam'] },
+            { fields: ['createdAt'] }
+        ]
     }).sync({ alter: true });
 
     Client.Timeouts = await Client.db.define('timeouts', {
