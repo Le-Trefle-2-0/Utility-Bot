@@ -1,17 +1,39 @@
 {
-    "toClose": {
-        "schedule": {
-            "default": ["23h56", "23h00"],
-            "monday": [],
-            "tuesday": [],
-            "wednesday": [],
-            "thursday": [],
-            "friday": [],
-            "saturday": [],
-            "sunday": []
-        },
-        "roles": {
-            "roleID": ["channelToCloseID", "channelToClose2ID..."]
-        }
+  "tickets": {
+    "categoryID": "YOUR_CATEGORY_ID_HERE",
+    "transcriptChannelID": "YOUR_TRANSCRIPT_CHANNEL_ID_HERE",
+    "teams": [
+      {
+        "name": "Support",
+        "emojiID": "👨‍💼",
+        "roleIDs": [
+          "ROLE_ID_1"
+        ]
+      },
+      {
+        "name": "Modération",
+        "emojiID": "⚔️",
+        "roleIDs": [
+          "ROLE_ID_2",
+          "ROLE_ID_3",
+          "ROLE_ID_4"
+        ]
+      }
+    ]
+  },
+  "toClose": {
+    "schedule": {
+      "default": ["23h56", "23h00"],
+      "monday": [],
+      "tuesday": [],
+      "wednesday": [],
+      "thursday": [],
+      "friday": [],
+      "saturday": [],
+      "sunday": []
+    },
+    "roles": {
+      "roleID": ["channelToCloseID", "channelToClose2ID..."]
     }
+  }
 }

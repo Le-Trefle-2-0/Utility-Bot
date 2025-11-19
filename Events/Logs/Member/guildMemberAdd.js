@@ -14,6 +14,7 @@ module.exports = async (Client, member) => {
         }
     });
     let durations = ['7d', '30d', '365d', '36500d'];
+    let sb = false;
 
     let newDuration = durations[previousSoftban.length-1];
     for (let softban of previousSoftban) {
@@ -21,6 +22,7 @@ module.exports = async (Client, member) => {
         let softbanEndDate = softbanStartDate + ms(softban.type.split(' ')[1]);
 
         if (softbanEndDate > Date.now()) {
+            sb = true;
             for (let role of Object.keys(Client.settings.toClose.roles)) {
                 for (let channelID of Client.settings.toClose.roles[role]) {
                     let channel = member.guild.channels.cache.get(channelID);
@@ -63,7 +65,7 @@ module.exports = async (Client, member) => {
     Client.emit('logs',
         'member',
         'Arrivée sur le serveur',
-        `<@${member.id}> à été invité par <@{{invitingMemberID}}>\nAge du compte : ${ms(Date.now()-member.user.createdTimestamp)}`,
+        `<@${member.id}> à été invité par <@{{invitingMemberID}}>\nAge du compte : ${ms(Date.now()-member.user.createdTimestamp)}${sb ? '\nSoft-ban réactivé automatiquement' : ''}`,
         member.id,
         member.avatarURL()
     );
