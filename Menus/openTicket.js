@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
 const ticketsConfig = require('../config/ticketsConfig');
 const ticketsPermissions = require('../Utility/ticketsPermissions');
 const ticketsLogger = require('../Utility/ticketsLogger');
