@@ -30,7 +30,7 @@ module.exports = {
                         .setCustomId('userId')
                         .setLabel('NE PAS MODIFIER')
                         .setMinLength(18)
-                        .setMaxLength(18)
+                        .setMaxLength(19)
                         .setRequired(true)
                         .setValue(interaction.targetUser.id)
                         .setStyle(TextInputStyle.Short)
