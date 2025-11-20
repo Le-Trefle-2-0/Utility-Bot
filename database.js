@@ -141,6 +141,24 @@ module.exports = async (Client) => {
     }).sync({ alter: true });
 
 
+    // Security settings for features like DM Lock auto-renew
+    Client.SecuritySettings = await Client.db.define('security_settings', {
+        guildID: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        dmLockEnabled: {
+            type: sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        lastRenewedAt: {
+            type: sequelize.INTEGER,
+            allowNull: true
+        }
+    }).sync({ alter: true });
+
+
 
     let timeouts = await Client.Timeouts.findAll();
     for (let timeout of timeouts) {
@@ -214,6 +232,90 @@ module.exports = async (Client) => {
             });
         }
     }
+
+    // ========== DM LOCK AUTO-RENEW SYSTEM ==========
+    // Keep scheduled renewal jobs per guild
+    Client.dmLockJobs = Client.dmLockJobs || new Map();
+
+    // Helper to send a moderation log message to the configured channel
+    Client._sendDMLockLog = async (guildId, message) => {
+        try {
+            const guild = Client.guilds.cache.get(guildId);
+            if (!guild) return;
+            const channelId = Client.settings?.logs?.moderation;
+            if (!channelId) return;
+            const channel = guild.channels.cache.get(channelId);
+            if (!channel) return;
+            await channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('9bd2d2')
+                        .setTitle('DM Lock')
+                        .setDescription(message)
+                        .setTimestamp(new Date())
+                ]
+            });
+        } catch (e) {
+            Client.log?.error?.(e);
+        }
+    };
+
+    // Apply/renew the DM lock logical state (cannot change Discord native setting via API)
+    Client.renewDMLock = async (guildId) => {
+        try {
+            await Client.SecuritySettings.upsert({
+                guildID: guildId,
+                dmLockEnabled: true,
+                lastRenewedAt: Date.now()
+            });
+            await Client._sendDMLockLog(guildId, 'Le verrouillage des MP a été renouvelé pour 24h supplémentaires.');
+        } catch (e) {
+            Client.log?.error?.(e);
+        }
+    };
+
+    // Schedule next renewal if enabled
+    Client.scheduleNextDMLockRenewal = async (guildId) => {
+        try {
+            // Clear previous if any
+            const existing = Client.dmLockJobs.get(guildId);
+            if (existing) {
+                try { existing.cancel(); } catch {}
+            }
+
+            const settings = await Client.SecuritySettings.findOne({ where: { guildID: guildId } });
+            if (!settings || !settings.dmLockEnabled) return;
+
+            const interval = ms('23h55m'); // renew slightly before 24h
+            const nextDate = new Date(Date.now() + interval);
+            const job = scheduleJob(nextDate, async () => {
+                const current = await Client.SecuritySettings.findOne({ where: { guildID: guildId } });
+                if (current?.dmLockEnabled) {
+                    await Client.renewDMLock(guildId);
+                    // Chain next schedule
+                    await Client.scheduleNextDMLockRenewal(guildId);
+                }
+            });
+            Client.dmLockJobs.set(guildId, job);
+        } catch (e) {
+            Client.log?.error?.(e);
+        }
+    };
+
+    // Resume schedules on startup
+    try {
+        const allSecurity = await Client.SecuritySettings.findAll({ where: { dmLockEnabled: true } });
+        for (const row of allSecurity) {
+            // If more than ~24h since last renewal, renew immediately
+            if (!row.lastRenewedAt || (Date.now() - row.lastRenewedAt) > ms('23h55m')) {
+                await Client.renewDMLock(row.guildID);
+            }
+            await Client.scheduleNextDMLockRenewal(row.guildID);
+        }
+    } catch (e) {
+        Client.log?.error?.(e);
+    }
+    // ========== END DM LOCK AUTO-RENEW SYSTEM ==========
 
     let softbans = await Client.ModLogs.findAll({
         where: {

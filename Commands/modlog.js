@@ -15,7 +15,7 @@ module.exports = {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         let user = interaction.options.getMember('utilisateur');
 
-        let historic = await Client.ModLogs.findAll({ where: { userId: user.id }});
+        let historic = await Client.ModLogs.findAll({ where: { userID: user.id, guildID: interaction.guild.id }});
 
         if (historic.length == 0) {
             return interaction.editReply({
@@ -32,7 +32,8 @@ module.exports = {
         let string = '';
         let array = [];
         for (let i = 0; i < historic.length; i++) {
-            let newString = `\`${historic[i].id}\` - **${historic[i].type}** par <@${historic[i].moderatorID}> le <t:${Math.round(historic[i].timestamp/1000)}:f>\n`;
+            let reasonText = historic[i].reason ? ` — ${historic[i].reason}` : '';
+            let newString = `\`${historic[i].id}\` - **${historic[i].type}** par <@${historic[i].moderatorID}> le <t:${Math.round(historic[i].timestamp/1000)}:f>${reasonText}\n`;
             if (string.length+newString.length > 512) {
                 array.push(string);
                 string = newString;
