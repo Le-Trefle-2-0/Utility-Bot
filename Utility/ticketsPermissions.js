@@ -43,12 +43,10 @@ const createTicketPermissions = (userID, guildID, roleID) => {
  */
 const addStaffPermissions = async (channel, member) => {
     try {
-        await channel.permissionOverwrites.create(member, {
-            allow: [
-                PermissionsBitField.Flags.ViewChannel,
-                PermissionsBitField.Flags.SendMessages,
-                PermissionsBitField.Flags.ReadMessageHistory
-            ]
+        await channel.permissionOverwrites.edit(member, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true
         });
     } catch (error) {
         throw new Error(`Failed to add staff permissions: ${error.message}`);
@@ -62,12 +60,9 @@ const addStaffPermissions = async (channel, member) => {
  */
 const removeRoleSendPermissions = async (channel, role) => {
     try {
-        const overwrite = channel.permissionOverwrites.cache.get(role.id);
-        if (overwrite) {
-            await overwrite.edit({
-                SendMessages: false
-            });
-        }
+        await channel.permissionOverwrites.edit(role, {
+            SendMessages: false
+        });
     } catch (error) {
         throw new Error(`Failed to remove role send permissions: ${error.message}`);
     }
@@ -84,13 +79,10 @@ const transferTicketPermissions = async (channel, oldRole, newRole) => {
         // Supprimer l'ancien rôle
         await channel.permissionOverwrites.delete(oldRole);
 
-        // Ajouter le nouveau rôle
-        await channel.permissionOverwrites.create(newRole, {
-            allow: [
-                PermissionsBitField.Flags.ViewChannel,
-                PermissionsBitField.Flags.ReadMessageHistory
-            ],
-            deny: [PermissionsBitField.Flags.SendMessages]
+        await channel.permissionOverwrites.edit(newRole, {
+            ViewChannel: true,
+            ReadMessageHistory: true,
+            SendMessages: false
         });
     } catch (error) {
         throw new Error(`Failed to transfer ticket permissions: ${error.message}`);
