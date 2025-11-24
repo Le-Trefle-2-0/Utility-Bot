@@ -140,6 +140,15 @@ module.exports = async (Client) => {
         }
     }).sync({ alter: true });
 
+    
+    // Cleanup: ensure any legacy DM Lock table is removed from the database
+    try {
+        const qi = Client.db.getQueryInterface();
+        await qi.dropTable('security_settings');
+    } catch (e) {
+        // ignore if it does not exist or cannot be dropped
+    }
+
 
 
     let timeouts = await Client.Timeouts.findAll();
@@ -214,6 +223,8 @@ module.exports = async (Client) => {
             });
         }
     }
+
+    // Note: DM Lock feature has been fully removed. Any legacy scheduled jobs or helpers were deleted.
 
     let softbans = await Client.ModLogs.findAll({
         where: {
