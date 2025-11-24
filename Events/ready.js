@@ -250,6 +250,10 @@ module.exports = async (Client) => {
                                 .setRequired(option.required)
                         );
                         break;
+
+                    default:
+                        Client.log?.warn?.(`Unknown option type '${option.type}' for command '${command.name}', option '${option.name}'`);
+                        break;
                 }
             }
         }
