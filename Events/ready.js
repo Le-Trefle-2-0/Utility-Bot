@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus, disableValidators } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, ApplicationCommandOptionType, EmbedBuilder, SlashCommandBuilder, REST, Routes, ActivityType, PresenceUpdateStatus, disableValidators } = require('discord.js');
 const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 const { Op } = require('sequelize');
@@ -189,6 +189,7 @@ module.exports = async (Client) => {
             for (let option of command.options) {
                 switch (option.type) {
                     case 'string':
+                    case ApplicationCommandOptionType.String:
                         data.addStringOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -197,6 +198,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'int':
+                    case ApplicationCommandOptionType.Integer:
                         data.addIntegerOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -205,6 +207,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'number':
+                    case ApplicationCommandOptionType.Number:
                         data.addNumberOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -213,6 +216,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'boolean':
+                    case ApplicationCommandOptionType.Boolean:
                         data.addBooleanOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -221,6 +225,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'user':
+                    case ApplicationCommandOptionType.User:
                         data.addUserOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -229,6 +234,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'channel':
+                    case ApplicationCommandOptionType.Channel:
                         data.addChannelOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')
@@ -237,6 +243,7 @@ module.exports = async (Client) => {
                         break;
 
                     case 'role':
+                    case ApplicationCommandOptionType.Role:
                         data.addRoleOption(opt =>
                             opt.setName(option.name)
                                 .setDescription(option.desc || 'Aucune description')

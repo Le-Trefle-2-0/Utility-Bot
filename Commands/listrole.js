@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageFlags, ApplicationCommandOptionType } = require('discord.js');
 
 function chunkArray(arr, size) {
     const chunks = [];
@@ -27,13 +27,13 @@ module.exports = {
         {
             name: 'role',
             description: 'Rôle à lister',
-            type: 'role',
+            type: ApplicationCommandOptionType.Role,
             required: true
         },
         {
             name: 'taille',
             description: 'Taille de page (par défaut 20, min 5, max 50)',
-            type: 'int',
+            type: ApplicationCommandOptionType.Integer,
             required: false
         }
     ],
