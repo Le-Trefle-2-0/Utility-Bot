@@ -1,4 +1,4 @@
-const { EmbedBuilder, PermissionsBitField, AuditLogEvent } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField, AuditLogEvent, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = async (Client, oldMember, newMember) => {
     if (oldMember.pending && !newMember.pending) {
@@ -29,19 +29,36 @@ module.exports = async (Client, oldMember, newMember) => {
         }
 
         const alertUser = await Client.users.fetch(alertUserId).catch(() => null);
-        if (alertUser) {
-            const embed = new EmbedBuilder()
-                .setTitle('🚨 Alerte Anti-Raid : Changement de permission Administrateur')
-                .setDescription(`La permission Administrateur a été ${newHasAdmin ? '**accordée à**' : '**révoquée de**'} un membre.`)
-                .addFields(
-                    { name: 'Membre', value: `${newMember.user.tag} (${newMember.id})`, inline: true },
-                    { name: 'Action', value: newHasAdmin ? '✅ Accordée' : '❌ Révoquée', inline: true },
-                    { name: 'Exécuté par', value: executor, inline: true }
-                )
-                .setColor(newHasAdmin ? 'Red' : 'Yellow')
-                .setTimestamp();
+        const embed = new EmbedBuilder()
+            .setTitle('🚨 Alerte Anti-Raid : Changement de permission Administrateur')
+            .setDescription(`La permission Administrateur a été ${newHasAdmin ? '**accordée à**' : '**révoquée de**'} un membre.`)
+            .addFields(
+                { name: 'Membre', value: `${newMember.user.tag} (${newMember.id})`, inline: true },
+                { name: 'Action', value: newHasAdmin ? '✅ Accordée' : '❌ Révoquée', inline: true },
+                { name: 'Exécuté par', value: executor, inline: true }
+            )
+            .setColor(newHasAdmin ? 'Red' : 'Yellow')
+            .setTimestamp();
 
+        if (alertUser) {
             alertUser.send({ embeds: [embed] }).catch(err => Client.log.error(`Échec de l'envoi du DM anti-raid : ${err.message}`));
         }
+
+        // Log sur Discord (Salon de modération/serveur)
+        const sendLog = require('../logs.js');
+        const logContent = `**Membre :** ${newMember.user.tag} (${newMember.id})\n` +
+                           `**Action :** ${newHasAdmin ? '✅ Administrateur Accordé' : '❌ Administrateur Révoqué'}\n` +
+                           `**Exécuté par :** ${executor}`;
+        
+        const components = [];
+        if (newHasAdmin && newMember.guild.members.me.roles.highest.position > newMember.roles.highest.position) {
+            const revokeButton = new ButtonBuilder()
+                .setCustomId(`antiraid_revoke_member_${newMember.id}`)
+                .setLabel('Révoquer Administrateur')
+                .setStyle(ButtonStyle.Danger);
+            components.push(new ActionRowBuilder().addComponents(revokeButton));
+        }
+
+        sendLog(Client, 'moderation', '🚨 Alerte Anti-Raid : Permission Administrateur', logContent, 'Anti-Raid System', null, components);
     }
 }

@@ -1,5 +1,5 @@
-const {EmbedBuilder} = require("discord.js");
-module.exports = async (Client, category, name, message, footer, image) => {
+const {EmbedBuilder, ActionRowBuilder} = require("discord.js");
+module.exports = async (Client, category, name, message, footer, image, components = []) => {
     console.log('New logs')
     const colors = {
         server: '9bd2d2', // vert clair trèfle
@@ -21,7 +21,8 @@ module.exports = async (Client, category, name, message, footer, image) => {
                         .setImage(image || null)
                         .setFooter({ text: footer || category })
                         .setTimestamp()
-                ]
+                ],
+                components: components
             });
         }
     }
