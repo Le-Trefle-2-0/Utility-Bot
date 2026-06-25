@@ -304,4 +304,17 @@ module.exports = async (Client) => {
     }
 
     Client.log.info('Commands publication has been completed');
+
+    // Invite tracking
+    Client.invites = new Map();
+    const mainGuild = Client.guilds.cache.get(Client.settings.mainGuildID);
+    if (mainGuild) {
+        try {
+            const guildInvites = await mainGuild.invites.fetch();
+            Client.invites.set(mainGuild.id, new Map(guildInvites.map(invite => [invite.code, invite.uses])));
+            Client.log.info(`Cached ${guildInvites.size} invites for guild ${mainGuild.id}`);
+        } catch (err) {
+            Client.log.error(`Failed to fetch invites for guild ${mainGuild.id}:`, err);
+        }
+    }
 }
