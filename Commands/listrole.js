@@ -37,7 +37,7 @@ module.exports = {
             required: false
         }
     ],
-    guilds: [process.env.MAIN_GUILD_ID],
+    guilds: ['mainGuildID'],
     run: async (Client, interaction) => {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 

@@ -1,4 +1,6 @@
 module.exports = async (Client, interaction) => {
+    if (interaction.guildId !== Client.settings.mainGuildID) return;
+
     if (interaction.isButton()) {
         let button = Client.buttons.get(interaction.customId);
 

@@ -260,8 +260,9 @@ module.exports = async (Client) => {
 
         if (command.guilds) {
             command.guilds.forEach(guild => {
-                if (!guildCommands[guild]) guildCommands[guild] = [];
-                guildCommands[guild].push(data.toJSON());
+                const guildID = guild === 'mainGuildID' ? Client.settings.mainGuildID : guild;
+                if (!guildCommands[guildID]) guildCommands[guildID] = [];
+                guildCommands[guildID].push(data.toJSON());
             });
         } else {
             commands.push(data.toJSON());
