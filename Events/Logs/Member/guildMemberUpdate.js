@@ -46,9 +46,18 @@ module.exports = async (Client, oldMember, newMember) => {
 
         // Log sur Discord (Salon de modération/serveur)
         const sendLog = require('../logs.js');
-        const logContent = `**Membre :** ${newMember.user.tag} (${newMember.id})\n` +
-                           `**Action :** ${newHasAdmin ? '✅ Administrateur Accordé' : '❌ Administrateur Révoqué'}\n` +
-                           `**Exécuté par :** ${executor}`;
+        const logEmbed = new EmbedBuilder()
+            .setAuthor({
+                name: newMember.user.displayName || newMember.user.username,
+                iconURL: newMember.user.displayAvatarURL({ dynamic: true })
+            })
+            .setDescription(
+                `🚨 **Alerte Anti-Raid : Permission Administrateur**\n\n` +
+                `**Membre :** <@${newMember.id}> (\`${newMember.id}\`)\n` +
+                `**Action :** ${newHasAdmin ? '✅ Administrateur Accordé' : '❌ Administrateur Révoqué'}\n` +
+                `**Exécuté par :** ${executor}`
+            )
+            .setFooter({ text: `ID de l'utilisateur : ${newMember.id} | Anti-Raid System` });
         
         const components = [];
         if (newHasAdmin && newMember.guild.members.me.roles.highest.position > newMember.roles.highest.position) {
@@ -59,6 +68,6 @@ module.exports = async (Client, oldMember, newMember) => {
             components.push(new ActionRowBuilder().addComponents(revokeButton));
         }
 
-        sendLog(Client, 'moderation', '🚨 Alerte Anti-Raid : Permission Administrateur', logContent, 'Anti-Raid System', null, components);
+        sendLog(Client, 'moderation', logEmbed, components);
     }
 }
