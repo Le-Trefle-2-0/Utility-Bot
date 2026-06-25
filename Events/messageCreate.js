@@ -156,11 +156,53 @@ function analyzeAIText(text) {
 }
 
 module.exports = async (Client, message) => {
-    // Log pour debug
-    console.log(`[DEBUG Anti-Spam] Message reçu de ${message.author.tag} dans ${message.channel.name}`);
-
     // Ne pas vérifier les bots ou les messages en dehors des serveurs
-    if (message.author.bot || !message.guild) return;
+    if (!message.guild && !message.author.bot) {
+        const DM_SYSTEM_PROMPT = `Tu es le bot utilitaire du serveur Discord Le Trèfle 2.0, une association d'écoute et de soutien moral. Un membre vient de t'envoyer un message en privé (DM).
+
+                                        Analyse ce message et réponds en français, en tutoyant, avec UN SEUL message court (1-3 phrases).
+                                        
+                                        CAS 1 - Si le message exprime, même indirectement, une détresse, un mal-être, une demande d'aide ou d'écoute, ou toute situation qui mériterait l'attention d'un Bénévole Écoutant : réponds de façon chaleureuse et sérieuse (sans humour), explique que tu n'es qu'un bot et donc pas en mesure d'apporter une vraie écoute, et invite la personne à se rendre dans <#720266206560387163> pour être mise en contact avec un Bénévole Écoutant.
+                                        
+                                        CAS 2 - Pour tout autre message (question, blague, message random, test...) : réponds sur un ton léger, amical et un peu taquin, rebondis brièvement sur ce qu'a écrit la personne si pertinent, précise que tu n'es qu'un bot pas vraiment doué pour la conversation, et invite-la à aller papoter dans <#718248830428119121> si elle veut échanger avec la communauté.
+                                        
+                                        Dans les deux cas : un seul message, pas de question en retour, ne propose pas de continuer la conversation avec toi.
+                                        
+                                        Réponds UNIQUEMENT avec un objet JSON de la forme {"case": "ecoute" ou "autre", "message": "ton message ici"}.`;
+        try {
+            message.channel.sendTyping();
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                    messages: [
+                        { role: 'system', content: DM_SYSTEM_PROMPT },
+                        { role: 'user', content: message.content }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 150
+                })
+            });
+
+            const data = await response.json();
+            let content = data.choices?.[0]?.message?.content?.trim();
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) content = jsonMatch[0];
+
+            const parsed = JSON.parse(content);
+            await message.channel.send(parsed.message);
+
+        } catch (err) {
+            console.error('Erreur DM LLM :', err);
+            await message.channel.send("Hello ! Je suis un bot donc pas top pour la discussion 😅 Si tu veux échanger, file faire un tour sur le serveur !");
+        }
+        return;
+    }
+    if (message.author.bot) return;
 
     const isAdmin = message.member?.permissions.has(PermissionsBitField.Flags.Administrator);
 
