@@ -190,6 +190,13 @@ module.exports = async (Client, message) => {
 
             const data = await response.json();
             let content = data.choices?.[0]?.message?.content?.trim();
+            console.log(content)
+
+            if (content) {
+                // Remove thinking process if present
+                content = content.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
+            }
+
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (jsonMatch) content = jsonMatch[0];
 
@@ -203,6 +210,21 @@ module.exports = async (Client, message) => {
         return;
     }
     if (message.author.bot) return;
+
+    // --- Whitelisted Channel AI Participation ---
+    const whitelistedChannels = Client.settings.whitelistedChannels || [];
+    if (whitelistedChannels.includes(message.channel.id)) {
+        const isMentioned = message.mentions.has(Client.user);
+        const isReplyToBot = message.reference && (await message.fetchReference().catch(() => null))?.author.id === Client.user.id;
+        
+        if (isMentioned || isReplyToBot) {
+            try {
+                await handleWhitelistedChannelMessage(Client, message);
+            } catch (err) {
+                console.error('Error in handleWhitelistedChannelMessage:', err);
+            }
+        }
+    }
 
     const isAdmin = message.member?.permissions.has(PermissionsBitField.Flags.Administrator);
 
@@ -385,3 +407,80 @@ module.exports = async (Client, message) => {
         }
     }
 };
+
+async function handleWhitelistedChannelMessage(Client, message) {
+    const CHANNEL_SYSTEM_PROMPT = `Tu es l'assistant du serveur Discord Le Trèfle 2.0. Tu participes à une discussion de groupe dans un salon textuel.
+
+Tes instructions :
+1. Détermine si le dernier message (le plus récent dans le contexte) t'est directement adressé ou s'il nécessite une intervention de ta part.
+2. Si on parle de toi à la troisième personne sans te solliciter, ou si la discussion ne te concerne pas du tout, réponds par "IGNORE".
+3. Si on te pose une question, si on te demande de l'aide, ou si on engage la conversation avec toi, réponds de manière amicale, concise et utile en français.
+4. Utilise le contexte des messages précédents pour comprendre le sujet de la discussion.
+5. Ne sois pas trop intrusif. Si tu n'es pas sûr, préfère ne pas répondre (IGNORE).
+6. Si tu réponds, fais-le en 1 à 3 phrases maximum.
+
+Réponds soit par "IGNORE" (sans rien d'autre), soit par ton message de réponse.`;
+
+    try {
+        await message.channel.sendTyping();
+
+        // Fetch context: last 25 messages
+        const messages = await message.channel.messages.fetch({ limit: 25 });
+        const context = [];
+        let totalChars = 0;
+        const MAX_CHARS = 4000;
+
+        // Sort messages by timestamp ascending
+        const sortedMessages = Array.from(messages.values()).reverse();
+
+        for (const msg of sortedMessages) {
+            const content = msg.content;
+            if (!content && !msg.attachments.size) continue;
+            
+            const authorName = msg.author.displayName || msg.author.username;
+            const formattedMsg = `${authorName}: ${content}`;
+            
+            if (totalChars + formattedMsg.length > MAX_CHARS) break;
+            
+            context.push({
+                role: msg.author.id === Client.user.id ? 'assistant' : 'user',
+                content: formattedMsg
+            });
+            totalChars += formattedMsg.length;
+        }
+
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'qwen/qwen3.6-27b',
+                messages: [
+                    { role: 'system', content: CHANNEL_SYSTEM_PROMPT },
+                    ...context
+                ],
+                temperature: 0.7,
+                max_tokens: 300
+            })
+        });
+
+        const data = await response.json();
+        let reply = data.choices?.[0]?.message?.content?.trim();
+
+        if (reply) {
+            // Remove thinking process if present (often enclosed in <think> tags)
+            reply = reply.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
+        }
+
+        if (!reply || reply.toUpperCase() === 'IGNORE' || reply.toUpperCase().startsWith('IGNORE')) {
+            return;
+        }
+
+        await message.reply(reply);
+
+    } catch (err) {
+        console.error('Error in Groq Whitelist Channel:', err);
+    }
+}
