@@ -199,7 +199,7 @@ async function getPublicWelcomeMessage(member) {
                         ]
                     }
                 ],
-                temperature: 0.8,
+                temperature: 0.6,
                 max_tokens: 200,
                 reasoning_effort: "none"
             })
