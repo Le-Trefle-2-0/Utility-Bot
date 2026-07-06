@@ -1,7 +1,10 @@
-const { Client, Collection } = require('discord.js');
+const { Client, Collection, Partials } = require('discord.js');
 const { algoliasearch } = require('algoliasearch');
 
-const client = new Client({ intents: 131071 });
+const client = new Client({ 
+    intents: 131071, 
+    partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.Reaction, Partials.User] 
+});
 
 client.commands = new Collection();
 client.buttons = new Collection();

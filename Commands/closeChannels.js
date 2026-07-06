@@ -1,6 +1,6 @@
 const {MessageFlags} = require("discord.js");
 module.exports = {
-    guilds: [process.env.MAIN_GUILD_ID],
+    guilds: ['mainGuildID'],
     run: async (Client, interaction) => {
         await Client.closeChannels();
         interaction.reply({

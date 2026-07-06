@@ -16,7 +16,7 @@ module.exports = {
             required: true
         }
     ],
-    guilds: [process.env.MAIN_GUILD_ID],
+    guilds: ['mainGuildID'],
     run: async (Client, interaction) => {
         try {
             let member = interaction.options.getMember('utilisateur');
