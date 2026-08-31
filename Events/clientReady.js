@@ -111,7 +111,7 @@ module.exports = async (Client) => {
                                 let message = await channel.send({
                                     embeds: [
                                         new EmbedBuilder()
-                                            .setTitle('<:onn:895691557817180191> Bonjour à toutes et à tous, les canaux vocaux et textuels sont ouverts.')
+                                            .setTitle('<:on:1543941282601111612> Bonjour à toutes et à tous, les canaux vocaux et textuels sont ouverts.')
                                             .setDescription('☀️ *Nous comptons sur vous pour avoir des échanges et des propos corrects.*')
                                             .setImage('https://cdn.discordapp.com/attachments/847519151890366514/1297634244733964288/BONJOUR-2.png?ex=67739550&is=677243d0&hm=5422be8cc7705b65887d79d0d6345eab2bfe5394c872bd525e8abb9e5f1cc952&')
                                             .setColor('9bd2d2')
