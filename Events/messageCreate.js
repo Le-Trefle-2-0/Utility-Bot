@@ -456,7 +456,7 @@ Réponds soit par "IGNORE" (sans rien d'autre), soit par ton message de réponse
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'qwen/qwen3.6-27b',
+                model: 'qwen/qwen3.8-27b',
                 messages: [
                     { role: 'system', content: CHANNEL_SYSTEM_PROMPT },
                     ...context
