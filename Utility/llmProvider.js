@@ -4,7 +4,6 @@ function getLLMSettings(Client) {
 
     return {
         providerBaseUrl: llmSettings.providerBaseUrl || 'https://api.groq.com/openai/v1',
-        apiKeyEnv: llmSettings.apiKeyEnv || 'GROQ_API_KEY',
         primaryModel: llmSettings.primaryModel || legacyModel || null,
         fallbackModel: llmSettings.fallbackModel || null
     };
@@ -45,7 +44,7 @@ async function testModel(providerBaseUrl, apiKey, model) {
 
 async function initializeLLMProvider(Client) {
     const llmSettings = getLLMSettings(Client);
-    const apiKey = process.env[llmSettings.apiKeyEnv];
+    const apiKey = process.env.GROQ_API_KEY;
 
     Client.llmProvider = {
         enabled: false,
@@ -55,7 +54,7 @@ async function initializeLLMProvider(Client) {
     };
 
     if (!apiKey) {
-        Client.llmProvider.reason = `Missing API key in env var ${llmSettings.apiKeyEnv}`;
+        Client.llmProvider.reason = `Missing API key in env var GROQ_API_KEY`;
         Client.log?.warn?.(`[LLM] ${Client.llmProvider.reason}`);
         return;
     }
@@ -99,10 +98,10 @@ async function createChatCompletion(Client, payload) {
     }
 
     const llmSettings = getLLMSettings(Client);
-    const apiKey = process.env[llmSettings.apiKeyEnv];
+    const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
-        throw new Error(`Missing API key in env var ${llmSettings.apiKeyEnv}`);
+        throw new Error(`Missing API key in env var GROQ_API_KEY`);
     }
 
     const response = await fetch(getChatCompletionsUrl(Client.llmProvider.providerBaseUrl), {

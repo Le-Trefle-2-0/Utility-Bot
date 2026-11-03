@@ -1,4 +1,5 @@
 const { createChatCompletion } = require('./llmProvider');
+const { getDecisionSettings, askDecisionModel } = require('./decisionModel');
 
 const DEFAULTS = {
     contextMessages: 20,
@@ -7,10 +8,7 @@ const DEFAULTS = {
     cooldownSeconds: 60,
     maxRepliesPerHour: 12,
     followUpSeconds: 120,
-    decisionUrl: 'https://decision.vllm-sr.ai/v1/systemone',
-    decisionModel: 'vllm-sr/d3-ultra',
-    replyThreshold: 0.6,
-    decisionTimeoutSeconds: 8
+    replyThreshold: 0.6
 };
 
 const MAX_LINE_CHARS = 600;
@@ -22,15 +20,12 @@ let decisionKeyWarned = false;
 function getAiChatSettings(Client) {
     const settings = Client.settings.aiChat || {};
     // Le bloc "decision" peut être dans aiChat ou à la racine de settings.json
-    const decision = settings.decision || Client.settings.decision || {};
+    const decision = getDecisionSettings(Client);
 
     return {
         channels: settings.channels || Client.settings.whitelistedChannels || [],
-        decisionUrl: decision.url || DEFAULTS.decisionUrl,
-        decisionApiKey: decision.apiKey || null,
-        decisionModel: decision.model || DEFAULTS.decisionModel,
+        decisionApiKey: decision.apiKey,
         replyThreshold: decision.replyThreshold ?? DEFAULTS.replyThreshold,
-        decisionTimeoutMs: (decision.timeoutSeconds ?? DEFAULTS.decisionTimeoutSeconds) * 1000,
         contextMessages: settings.contextMessages ?? DEFAULTS.contextMessages,
         maxContextChars: settings.maxContextChars ?? DEFAULTS.maxContextChars,
         debounceMs: (settings.debounceSeconds ?? DEFAULTS.debounceSeconds) * 1000,
@@ -204,23 +199,12 @@ async function shouldReply(Client, ctx, settings) {
         botHint += ` Le dernier message vient de la personne à qui ${ctx.botName} vient de répondre : c'est potentiellement la suite de leur échange. Il faut répondre si elle poursuit la discussion (nouvelle question, précision, demande), mais pas si elle la conclut (merci, ok, d'accord, lol…) ni si elle s'adresse à quelqu'un d'autre.`;
     }
 
-    const response = await fetch(settings.decisionUrl, {
-        method: 'POST',
-        headers: {
-            'Authorization': ['Bearer', settings.decisionApiKey].join(' '),
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: settings.decisionModel,
-            state: `Conversation (du plus ancien au plus récent) :\n${ctx.transcript}\n\n${botHint}\nDernier message à évaluer — ${ctx.lastMessage}`,
-            questions: buildDecisionQuestion(ctx.botName)
-        }),
-        signal: AbortSignal.timeout(settings.decisionTimeoutMs)
+    const answers = await askDecisionModel(Client, {
+        state: `Conversation (du plus ancien au plus récent) :\n${ctx.transcript}\n\n${botHint}\nDernier message à évaluer — ${ctx.lastMessage}`,
+        questions: buildDecisionQuestion(ctx.botName)
     });
 
-    if (!response.ok) throw new Error(`Decision model HTTP ${response.status}`);
-
-    const pReply = (await response.json())?.answers?.action?.probabilities?.reply;
+    const pReply = answers.action?.probabilities?.reply;
     if (typeof pReply !== 'number') throw new Error('Decision model: unexpected response');
 
     Client.log?.info?.(`[AI Chat] decision: reply=${pReply.toFixed(2)} (threshold ${settings.replyThreshold})`);
