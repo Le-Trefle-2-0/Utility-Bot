@@ -2,6 +2,7 @@ const { Collection, EmbedBuilder, PermissionsBitField, ActionRowBuilder, ButtonB
 const Tesseract = require('tesseract.js');
 const axios = require('axios');
 const zlib = require('zlib');
+const { createChatCompletion } = require('../Utility/llmProvider');
 
 // Map pour stocker les données de spam (en mémoire)
 // Clé : userId
@@ -169,26 +170,21 @@ module.exports = async (Client, message) => {
                                         Dans les deux cas : un seul message, pas de question en retour, ne propose pas de continuer la conversation avec toi.
                                         
                                         Réponds UNIQUEMENT avec un objet JSON de la forme {"case": "ecoute" ou "autre", "message": "ton message ici"}.`;
+        if (!Client.llmProvider?.enabled) {
+            await message.channel.send("Hello ! Je suis un bot donc pas top pour la discussion 😅 Si tu veux échanger, file faire un tour sur le serveur !");
+            return;
+        }
+
         try {
             message.channel.sendTyping();
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-                    messages: [
-                        { role: 'system', content: DM_SYSTEM_PROMPT },
-                        { role: 'user', content: message.content }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 150
-                })
+            const data = await createChatCompletion(Client, {
+                messages: [
+                    { role: 'system', content: DM_SYSTEM_PROMPT },
+                    { role: 'user', content: message.content }
+                ],
+                temperature: 0.7,
+                max_tokens: 150
             });
-
-            const data = await response.json();
             let content = data.choices?.[0]?.message?.content?.trim();
             console.log(content)
 
@@ -204,7 +200,7 @@ module.exports = async (Client, message) => {
             await message.channel.send(parsed.message);
 
         } catch (err) {
-            console.error('Erreur DM LLM :', err);
+            console.error('Erreur DM LLM.');
             await message.channel.send("Hello ! Je suis un bot donc pas top pour la discussion 😅 Si tu veux échanger, file faire un tour sur le serveur !");
         }
         return;
@@ -409,6 +405,7 @@ module.exports = async (Client, message) => {
 };
 
 async function handleWhitelistedChannelMessage(Client, message) {
+    if (!Client.llmProvider?.enabled) return;
     const CHANNEL_SYSTEM_PROMPT = `Tu es l'assistant du serveur Discord Le Trèfle 2.0. Tu participes à une discussion de groupe dans un salon textuel.
 
 Tes instructions :
@@ -449,24 +446,14 @@ Réponds soit par "IGNORE" (sans rien d'autre), soit par ton message de réponse
             totalChars += formattedMsg.length;
         }
 
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'qwen/qwen3.6-27b',
-                messages: [
-                    { role: 'system', content: CHANNEL_SYSTEM_PROMPT },
-                    ...context
-                ],
-                temperature: 0.7,
-                max_tokens: 300
-            })
+        const data = await createChatCompletion(Client, {
+            messages: [
+                { role: 'system', content: CHANNEL_SYSTEM_PROMPT },
+                ...context
+            ],
+            temperature: 0.7,
+            max_tokens: 300
         });
-
-        const data = await response.json();
         let reply = data.choices?.[0]?.message?.content?.trim();
 
         if (reply) {
@@ -481,6 +468,6 @@ Réponds soit par "IGNORE" (sans rien d'autre), soit par ton message de réponse
         await message.reply(reply);
 
     } catch (err) {
-        console.error('Error in Groq Whitelist Channel:', err);
+        console.error('Error in LLM Whitelist Channel.');
     }
 }
