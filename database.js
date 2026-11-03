@@ -76,6 +76,20 @@ module.exports = async (Client) => {
         summonedBy: {
             type: sequelize.STRING,
             allowNull: true
+        },
+        // Staff qui a pris le ticket en charge (null tant qu'il attend l'équipe)
+        takenBy: {
+            type: sequelize.STRING,
+            allowNull: true
+        },
+        // Depuis quand le ticket attend une prise en charge (ouverture ou dernier transfert)
+        waitingSince: {
+            type: sequelize.DATE,
+            allowNull: true
+        },
+        lastTeamReminderAt: {
+            type: sequelize.DATE,
+            allowNull: true
         }
     }, {
         indexes: [
@@ -83,6 +97,18 @@ module.exports = async (Client) => {
             { fields: ['assignedTeam'] },
             { fields: ['createdAt'] }
         ]
+    }).sync({ alter: true });
+
+    // Salons de tickets clos : verrouillés, puis supprimés à l'échéance (survit aux redémarrages)
+    Client.TicketDeletions = await Client.db.define('ticketdeletions', {
+        channelID: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        deleteAt: {
+            type: sequelize.DATE,
+            allowNull: false
+        }
     }).sync({ alter: true });
 
     Client.Timeouts = await Client.db.define('timeouts', {

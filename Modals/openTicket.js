@@ -1,31 +1,40 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, MessageFlags } = require("discord.js");
 const ticketsConfig = require('../config/ticketsConfig');
+const { recommendTeam, buildRecommendationEmbed, buildRecommendationButton } = require('../Utility/ticketsRecommendation');
 
 module.exports = async (Client, interaction) => {
+    // La recherche et la recommandation peuvent dépasser les 3 secondes accordées pour répondre
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     try {
         let question = interaction.fields.getTextInputValue('question');
 
         if (!question) {
-            return interaction.reply({
-                content: 'Veuillez entrer une question',
-                flags: MessageFlags.Ephemeral
+            return interaction.editReply({
+                content: 'Veuillez entrer une question'
             });
         }
 
-        let search = await Client.algolia.search({
-            requests: [{
-                indexName: 'questions',
-                query: question,
-                hitsPerPage: 5
-            }]
-        });
+        // En parallèle : questions déjà posées, et équipe recommandée (jamais bloquant)
+        const [search, recommendation] = await Promise.all([
+            Client.algolia.search({
+                requests: [{
+                    indexName: 'questions',
+                    query: question,
+                    hitsPerPage: 5
+                }]
+            }),
+            recommendTeam(Client, question)
+        ]);
 
+        // Avec une recommandation, un bouton ouvre directement le ticket pour cette équipe ;
+        // le menu propose alors les autres équipes, pour ceux qui ne sont pas d'accord
         let selector = new StringSelectMenuBuilder()
             .setCustomId('openTicket')
-            .setPlaceholder('Sélectionnez une équipe');
+            .setPlaceholder(recommendation ? 'Ou choisissez une autre équipe' : 'Sélectionnez une équipe');
 
         let options = [];
-        const teams = ticketsConfig.getAllTeams();
+        const teams = ticketsConfig.getAllTeams().filter(team => team.name !== recommendation?.team.name);
 
         for (let team of teams) {
             const option = new StringSelectMenuOptionBuilder()
@@ -43,14 +52,19 @@ module.exports = async (Client, interaction) => {
 
         selector.addOptions(options);
 
-        let row = new ActionRowBuilder().addComponents(selector);
+        const components = [new ActionRowBuilder().addComponents(selector)];
+        if (recommendation) components.unshift(buildRecommendationButton(recommendation));
+
         let hits = search.results[0].hits;
+        const recommendationEmbeds = recommendation ? [buildRecommendationEmbed(recommendation)] : [];
 
         if (hits.length < 1) {
-            return interaction.reply({
-                content: 'Quelle équipe souhaitez-vous contacter ?\nEn cas de doute, merci de contacter notre équipe de guides.',
-                components: [row],
-                flags: MessageFlags.Ephemeral
+            return interaction.editReply({
+                content: recommendation
+                    ? 'Quelle équipe souhaitez-vous contacter ?'
+                    : 'Quelle équipe souhaitez-vous contacter ?\nEn cas de doute, merci de contacter notre équipe de guides.',
+                embeds: recommendationEmbeds,
+                components
             });
         } else {
             let string = '';
@@ -58,19 +72,19 @@ module.exports = async (Client, interaction) => {
                 if (!string.includes(hit.threadLink)) string += `${hit.threadLink}\n`;
             }
 
-            interaction.reply({
+            interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor('9bd2d2')
-                        .setDescription(`Il semblerait que votre question ait déjà été posée. Voici les résultats trouvés :\n\n${string}\nSi aucun de ces résultats ne répond à votre question, veuillez sélectionner une équipe ci-dessous. En cas de doute, merci de contacter notre équipe de guides.\nEn ouvrant un ticket, vous certifiez avoir consulté les résultats proposés ci-dessus ainsi que la <#960639230818807909>.`)
-                ], components: [row], flags: MessageFlags.Ephemeral
+                        .setDescription(`Il semblerait que votre question ait déjà été posée. Voici les résultats trouvés :\n\n${string}\nSi aucun de ces résultats ne répond à votre question, veuillez sélectionner une équipe ci-dessous. En cas de doute, merci de contacter notre équipe de guides.\nEn ouvrant un ticket, vous certifiez avoir consulté les résultats proposés ci-dessus ainsi que la <#960639230818807909>.`),
+                    ...recommendationEmbeds
+                ], components
             });
         }
     } catch (error) {
         console.error('Error in openTicket modal:', error);
-        interaction.reply({
-            content: ':x: | Une erreur est survenue',
-            flags: MessageFlags.Ephemeral
-        });
+        interaction.editReply({
+            content: ':x: | Une erreur est survenue'
+        }).catch(() => {});
     }
 }
