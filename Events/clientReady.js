@@ -3,10 +3,12 @@ const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 const { Op } = require('sequelize');
 const ms = require('ms');
+const { initializeLLMProvider } = require('../Utility/llmProvider');
 
 module.exports = async (Client) => {
     disableValidators();
     Client.log.info('WebSocket connection to Discord has been established');
+    await initializeLLMProvider(Client);
 
     Client.log.info('Starting commands publication');
 
