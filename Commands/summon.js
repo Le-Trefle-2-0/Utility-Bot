@@ -117,7 +117,9 @@ module.exports = {
                 userID: member.id,
                 channelID: ticketChannel.id,
                 assignedTeam: team.name,
-                summonedBy: interaction.user.id
+                summonedBy: interaction.user.id,
+                takenBy: interaction.user.id,
+                waitingSince: new Date()
             });
 
             ticketsLogger.logTicketSummon(ticket.id, interaction.user.id, member.id, team.name, ticketChannel.id);
