@@ -93,7 +93,7 @@ const sendClosureNotifications = async (Client, interaction, ticket, ticketId) =
                         embeds: [
                             new EmbedBuilder()
                                 .setColor('9bd2d2')
-                                .setDescription(`**Clôture de ticket**\n\nID : \`${ticketId}\`\nOuvert par : <@${ticket.userID}>\nÉquipe en charge : ${ticket.assignedTeam}\nFermé par : <@${interaction.user.id}>`)
+                                .setDescription(`**Clôture de ticket**\n\nID : \`${ticketId}\`\n${ticket.summonedBy ? `Convoqué par : <@${ticket.summonedBy}>\nMembre convoqué : <@${ticket.userID}>` : `Ouvert par : <@${ticket.userID}>`}\nÉquipe en charge : ${ticket.assignedTeam}\nFermé par : <@${interaction.user.id}>`)
                         ],
                         components: row
                     });

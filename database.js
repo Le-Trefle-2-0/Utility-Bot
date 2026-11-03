@@ -71,6 +71,11 @@ module.exports = async (Client) => {
         closedBy: {
             type: sequelize.STRING,
             allowNull: true
+        },
+        // Renseigné uniquement pour les tickets ouverts par un staff via /summon
+        summonedBy: {
+            type: sequelize.STRING,
+            allowNull: true
         }
     }, {
         indexes: [
