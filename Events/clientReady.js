@@ -3,10 +3,13 @@ const { scheduleJob } = require('node-schedule');
 const { Moon } =require('lunarphase-js');
 const { Op } = require('sequelize');
 const ms = require('ms');
+const { initializeLLMProvider } = require('../Utility/llmProvider');
+const ticketsMaintenance = require('../Utility/ticketsMaintenance');
 
 module.exports = async (Client) => {
     disableValidators();
     Client.log.info('WebSocket connection to Discord has been established');
+    await initializeLLMProvider(Client);
 
     Client.log.info('Starting commands publication');
 
@@ -305,6 +308,9 @@ module.exports = async (Client) => {
     }
 
     Client.log.info('Commands publication has been completed');
+
+    // Suivi des tickets : suppression différée, rappels, fermeture si le membre est parti
+    ticketsMaintenance.start(Client);
 
     // Invite tracking
     Client.invites = new Map();

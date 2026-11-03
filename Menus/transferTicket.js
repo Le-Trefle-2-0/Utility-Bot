@@ -49,6 +49,10 @@ module.exports = async (Client, interaction) => {
         // Mettre à jour la BD
         await ticket.update({
             assignedTeam: newTeamName,
+            // La nouvelle équipe doit à son tour prendre le ticket en charge
+            takenBy: null,
+            waitingSince: new Date(),
+            lastTeamReminderAt: null
         });
 
         // Logger

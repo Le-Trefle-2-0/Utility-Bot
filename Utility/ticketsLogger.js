@@ -38,6 +38,17 @@ const logTicketCreate = (ticketId, userId, roleID, channelID) => {
     });
 };
 
+const logTicketSummon = (ticketId, staffId, userId, team, channelID) => {
+    log(logTypes.CREATE, {
+        ticketId,
+        staffId,
+        userId,
+        team,
+        channelID,
+        action: 'Ticket summoned by staff'
+    });
+};
+
 const logTicketTake = (ticketId, userId, roleID) => {
     log(logTypes.TAKE, {
         ticketId,
@@ -76,6 +87,7 @@ const logError = (context, error) => {
 
 module.exports = {
     logTicketCreate,
+    logTicketSummon,
     logTicketTake,
     logTicketTransfer,
     logTicketClose,

@@ -1,4 +1,25 @@
 {
+  "llm": {
+    "providerBaseUrl": "https://api.groq.com/openai/v1",
+    "primaryModel": "qwen/qwen3.8-27b",
+    "fallbackModel": "qwen/qwen3.6-27b"
+  },
+  "aiChat": {
+    "channels": ["CHANNEL_ID_1", "CHANNEL_ID_2"],
+    "decision": {
+      "url": "https://decision.vllm-sr.ai/v1/systemone",
+      "apiKey": "YOUR_VLLM_SR_API_KEY_HERE",
+      "model": "vllm-sr/d3-ultra",
+      "replyThreshold": 0.6,
+      "timeoutSeconds": 8
+    },
+    "contextMessages": 20,
+    "maxContextChars": 6000,
+    "debounceSeconds": 4,
+    "cooldownSeconds": 60,
+    "maxRepliesPerHour": 12,
+    "followUpSeconds": 120
+  },
   "tickets": {
     "categoryID": "YOUR_CATEGORY_ID_HERE",
     "transcriptChannelID": "YOUR_TRANSCRIPT_CHANNEL_ID_HERE",

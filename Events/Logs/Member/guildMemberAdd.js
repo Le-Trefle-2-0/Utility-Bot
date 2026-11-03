@@ -2,6 +2,7 @@ const ms = require("ms");
 const {Op} = require("sequelize");
 const {MessageFlags, EmbedBuilder, ChannelType} = require("discord.js");
 const {scheduleJob} = require("node-schedule");
+const { createChatCompletion } = require("../../../Utility/llmProvider");
 
 module.exports = async (Client, member) => {
     // Determine inviter
@@ -114,7 +115,7 @@ async function sendPublicWelcome(Client, member) {
     const channel = member.guild.channels.cache.get(channelID);
     if (!channel) return;
 
-    const message = await getPublicWelcomeMessage(member);
+    const message = await getPublicWelcomeMessage(Client, member);
     if (!message) return;
 
     const sentMessage = await channel.send(message);
@@ -174,38 +175,29 @@ async function sendWelcomeThread(Client, member) {
     }
 }
 
-async function getPublicWelcomeMessage(member) {
+async function getPublicWelcomeMessage(Client, member) {
     const pseudo = member.displayName;
     const bio = member.user.bio || '';
     const avatarURL = member.user.displayAvatarURL({ extension: 'png', size: 256 });
-
     const fallback = `Bienvenue à ${member} qui vient de nous rejoindre ! N'hésitez pas à lui souhaiter la bienvenue ! 👋`;
+    if (!Client.llmProvider?.enabled) return fallback;
 
     try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'qwen/qwen3.6-27b',
-                messages: [
-                    { role: 'system', content: PUBLIC_SYSTEM_PROMPT },
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: `Pseudo : ${pseudo}\nBio : ${bio || '(aucune)'}` },
-                        ]
-                    }
-                ],
-                temperature: 0.6,
-                max_tokens: 200,
-                reasoning_effort: "none"
-            })
+        const data = await createChatCompletion(Client, {
+            messages: [
+                { role: 'system', content: PUBLIC_SYSTEM_PROMPT },
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: `Pseudo : ${pseudo}
+Bio : ${bio || '(aucune)'}` },
+                    ]
+                }
+            ],
+            temperature: 0.6,
+            max_tokens: 200,
+            reasoning_effort: "none"
         });
-
-        const data = await response.json();
         let content = data.choices?.[0]?.message?.content;
         if (!content) return fallback;
 
@@ -220,7 +212,7 @@ async function getPublicWelcomeMessage(member) {
         return content.replace('[member]', `<@${member.id}>`);
 
     } catch (err) {
-        console.error('Erreur API Groq (public) :', err);
+        console.error('Erreur API LLM (public).');
         return fallback;
     }
 }
@@ -229,12 +221,12 @@ async function getWelcomeMessages(Client, member) {
     const pseudo = member.displayName;
     const bio = member.user.bio || '';
     const avatarURL = member.user.displayAvatarURL({ extension: 'png', size: 256 });
-
     const fallback = [
         `Bienvenue parmi nous !`,
         `On est ravis de t'avoir avec nous sur Le Trèfle 2.0.`,
         `Bon, je t'embête pas plus longtemps, je te laisse explorer le serveur. N'hésite pas à faire signe à notre équipe de Guides si tu as besoin d'un coup de main !`
     ];
+    if (!Client.llmProvider?.enabled) return fallback;
 
     try {
         const SYSTEM_PROMPT = `Tu es l'hôte d'accueil chaleureux et un peu taquin du serveur Discord Le Trèfle 2.0, une association d'écoute et de soutien moral. Génère un message de bienvenue en 4 à 5 messages courts pour un nouveau membre, en français exclusivement, en le tutoyant. 
@@ -262,31 +254,22 @@ async function getWelcomeMessages(Client, member) {
         
         Utilise-les naturellement dans le texte, ne les liste pas tous, choisis ceux qui correspondent au ton du moment.`;
         
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'qwen/qwen3.6-27b',
-                messages: [
-                    { role: 'system', content: SYSTEM_PROMPT },
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: `Pseudo : ${pseudo}\nBio : ${bio || '(aucune)'}` },
-                            { type: 'image_url', image_url: { url: avatarURL } }
-                        ]
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 300,
-                reasoning_effort: "none"
-            })
+        const data = await createChatCompletion(Client, {
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: `Pseudo : ${pseudo}
+Bio : ${bio || '(aucune)'}` },
+                        { type: 'image_url', image_url: { url: avatarURL } }
+                    ]
+                }
+            ],
+            temperature: 0.7,
+            max_tokens: 300,
+            reasoning_effort: "none"
         });
-
-        const data = await response.json();
         let content = data.choices?.[0]?.message?.content;
         if (!content) return fallback;
 
@@ -321,7 +304,7 @@ async function getWelcomeMessages(Client, member) {
         });
 
     } catch (err) {
-        console.error('Erreur API Groq / parsing :', err);
+        console.error('Erreur API LLM / parsing.');
         return fallback;
     }
 }

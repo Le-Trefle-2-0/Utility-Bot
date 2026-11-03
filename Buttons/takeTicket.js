@@ -47,6 +47,9 @@ module.exports = async (Client, interaction) => {
         // Ajouter les permissions au staff
         await ticketsPermissions.addStaffPermissions(interaction.channel, interaction.member);
 
+        // Le ticket est désormais attribué à ce membre du staff (suivi des rappels)
+        await ticket.update({ takenBy: interaction.user.id });
+
         // Envoyer le message de notification
         await interaction.channel.send({
             embeds: [

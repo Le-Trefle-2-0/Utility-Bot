@@ -19,6 +19,10 @@ const validateTeam = (team, index) => {
             throw new Error(`Invalid team[${index}].roleIDs[${roleIndex}]: must be a non-empty string, got: ${roleID}`);
         }
     });
+    // Optionnel : ce que traite l'équipe, utilisé pour recommander une équipe à l'ouverture d'un ticket
+    if (team.topics !== undefined && typeof team.topics !== 'string') {
+        throw new Error(`Invalid team[${index}]: topics must be a string, got: ${typeof team.topics}`);
+    }
     return true;
 };
 
