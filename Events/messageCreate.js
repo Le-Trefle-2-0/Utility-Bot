@@ -409,6 +409,7 @@ module.exports = async (Client, message) => {
 };
 
 async function handleWhitelistedChannelMessage(Client, message) {
+    const groqModel = Client.settings.groqModel;
     const CHANNEL_SYSTEM_PROMPT = `Tu es l'assistant du serveur Discord Le Trèfle 2.0. Tu participes à une discussion de groupe dans un salon textuel.
 
 Tes instructions :
@@ -456,7 +457,7 @@ Réponds soit par "IGNORE" (sans rien d'autre), soit par ton message de réponse
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'qwen/qwen3.8-27b',
+                model: groqModel,
                 messages: [
                     { role: 'system', content: CHANNEL_SYSTEM_PROMPT },
                     ...context

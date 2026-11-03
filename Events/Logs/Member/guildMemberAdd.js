@@ -114,7 +114,7 @@ async function sendPublicWelcome(Client, member) {
     const channel = member.guild.channels.cache.get(channelID);
     if (!channel) return;
 
-    const message = await getPublicWelcomeMessage(member);
+    const message = await getPublicWelcomeMessage(Client, member);
     if (!message) return;
 
     const sentMessage = await channel.send(message);
@@ -174,10 +174,11 @@ async function sendWelcomeThread(Client, member) {
     }
 }
 
-async function getPublicWelcomeMessage(member) {
+async function getPublicWelcomeMessage(Client, member) {
     const pseudo = member.displayName;
     const bio = member.user.bio || '';
     const avatarURL = member.user.displayAvatarURL({ extension: 'png', size: 256 });
+    const groqModel = Client.settings.groqModel;
 
     const fallback = `Bienvenue à ${member} qui vient de nous rejoindre ! N'hésitez pas à lui souhaiter la bienvenue ! 👋`;
 
@@ -189,7 +190,7 @@ async function getPublicWelcomeMessage(member) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'qwen/qwen3.8-27b',
+                model: groqModel,
                 messages: [
                     { role: 'system', content: PUBLIC_SYSTEM_PROMPT },
                     {
@@ -229,6 +230,7 @@ async function getWelcomeMessages(Client, member) {
     const pseudo = member.displayName;
     const bio = member.user.bio || '';
     const avatarURL = member.user.displayAvatarURL({ extension: 'png', size: 256 });
+    const groqModel = Client.settings.groqModel;
 
     const fallback = [
         `Bienvenue parmi nous !`,
@@ -269,7 +271,7 @@ async function getWelcomeMessages(Client, member) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'qwen/qwen3.8-27b',
+                model: groqModel,
                 messages: [
                     { role: 'system', content: SYSTEM_PROMPT },
                     {

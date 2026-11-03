@@ -1,4 +1,5 @@
 {
+  "groqModel": "qwen/qwen3.8-27b",
   "tickets": {
     "categoryID": "YOUR_CATEGORY_ID_HERE",
     "transcriptChannelID": "YOUR_TRANSCRIPT_CHANNEL_ID_HERE",
