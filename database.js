@@ -127,6 +127,32 @@ module.exports = async (Client) => {
         }
     }).sync({ alter: true });
 
+    // Système de niveaux : XP cumulée par membre et par serveur
+    Client.Levels = await Client.db.define('levels', {
+        userID: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        guildID: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        xp: {
+            type: sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        level: {
+            type: sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        }
+    }, {
+        indexes: [
+            { fields: ['guildID', 'xp'] }
+        ]
+    }).sync({ alter: true });
+
     Client.Timeouts = await Client.db.define('timeouts', {
         id: {
             type: sequelize.INTEGER,

@@ -20,6 +20,14 @@
     "maxRepliesPerHour": 12,
     "followUpSeconds": 120
   },
+  "contentModeration": {
+    "enabled": true,
+    "model": "vllm-sr/d3-flash",
+    "timeoutSeconds": 5,
+    "minLength": 12,
+    "thresholds": { "scam": 0.7, "personalInfo": 0.6, "inappropriate": 0.6 },
+    "ignoredChannels": []
+  },
   "tickets": {
     "categoryID": "YOUR_CATEGORY_ID_HERE",
     "transcriptChannelID": "YOUR_TRANSCRIPT_CHANNEL_ID_HERE",

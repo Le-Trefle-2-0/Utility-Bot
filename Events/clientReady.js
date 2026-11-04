@@ -36,7 +36,11 @@ module.exports = async (Client) => {
         Client.closeWarned.add(channel.id);
         const closeTimestamp = Math.floor(Client.closeAt / 1000);
         try {
+            // Les mentions doivent être dans `content` (hors embed) pour notifier les membres
+            const mentions = channel.members.filter(member => !member.user.bot).map(member => member.toString()).join(' ').slice(0, 1900);
             await channel.send({
+                content: mentions || undefined,
+                allowedMentions: { users: channel.members.filter(member => !member.user.bot).map(member => member.id) },
                 embeds: [
                     new EmbedBuilder()
                         .setTitle('⚠️ Fermeture imminente des salons')
