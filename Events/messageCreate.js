@@ -4,6 +4,8 @@ const axios = require('axios');
 const zlib = require('zlib');
 const { createChatCompletion } = require('../Utility/llmProvider');
 const { handleChannelMessage } = require('../Utility/aiChat');
+const { handleMessageXp } = require('../Utility/levels');
+const { handleContentModeration } = require('../Utility/contentModeration');
 
 // Map pour stocker les données de spam (en mémoire)
 // Clé : userId
@@ -333,6 +335,17 @@ module.exports = async (Client, message) => {
                 };
             }
         }
+    }
+
+    // --- Modération IA (d3-flash) : arnaques, informations personnelles sensibles, contenu inapproprié ---
+    // Non bloquant ; ignoré si l'anti-spam/anti-arnaque local a déjà agi.
+    if (!spamType && !scamType) {
+        handleContentModeration(Client, message).catch(err => Client.log?.warn?.(`[Modération IA] ${err.message}`));
+    }
+
+    // --- Système de niveaux : pas d'XP pour les messages détectés comme spam/arnaque ---
+    if (!spamType && !scamType) {
+        handleMessageXp(Client, message).catch(err => Client.log?.warn?.(`[Niveaux] ${err.message}`));
     }
 
     // Si un spam, une arnaque ou du contenu IA est détecté
