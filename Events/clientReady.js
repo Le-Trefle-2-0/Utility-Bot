@@ -6,6 +6,8 @@ const ms = require('ms');
 const { initializeLLMProvider } = require('../Utility/llmProvider');
 const ticketsMaintenance = require('../Utility/ticketsMaintenance');
 const closeExceptions = require('../Utility/closeExceptions');
+const modVoice = require('../Utility/modVoice');
+const { startTicker: startCollectTicker } = require('../Utility/collect');
 
 module.exports = async (Client) => {
     disableValidators();
@@ -219,6 +221,7 @@ module.exports = async (Client) => {
     }
 
     closeExceptions.scheduleAll(Client);
+    modVoice.start(Client);
 
     // Client.musicPlayer.init(Client);
 
@@ -354,6 +357,9 @@ module.exports = async (Client) => {
 
     // Suivi des tickets : suppression différée, rappels, fermeture si le membre est parti
     ticketsMaintenance.start(Client);
+
+    // Évènements de collecte : annonces de début et de fin
+    startCollectTicker(Client);
 
     // Le suivi des invitations est initialisé dans Utility/logging/botLifecycle.js
 }

@@ -5,11 +5,12 @@ const colors = {
     textual: '2986cc', // bleu
     moderation: '8B0000', // rouge ocre
     voice: 'ce7e00', // orange
-    member: '008000' // vert
+    member: '008000', // vert
+    bot: '5865F2' // bleu Discord
 };
 
 /**
- * Envoie un log dans le salon de la catégorie demandée (member, server, textual, voice, moderation).
+ * Envoie un log dans le salon de la catégorie demandée (member, server, textual, voice, moderation, bot ; « bot » retombe sur « server » s'il n'est pas configuré).
  *
  * Signature actuelle : (Client, category, embed | embed[], components?, files?)
  * Signature historique (toujours acceptée) : (Client, category, titre, description, pied de page, _, components)
@@ -31,7 +32,7 @@ module.exports = async (Client, category, embeds, ...rest) => {
     try {
         const guild = Client.guilds.cache.get(Client.settings.mainGuildID);
         if (!guild) return;
-        const channel = Client.channels.cache.get(Client.settings.logs?.[category]);
+        const channel = Client.channels.cache.get(Client.settings.logs?.[category] || (category === 'bot' ? Client.settings.logs?.server : undefined));
         if (!channel) return;
 
         const embedArray = (Array.isArray(embeds) ? embeds : [embeds]).slice(0, 10);

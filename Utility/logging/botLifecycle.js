@@ -6,13 +6,13 @@ const { cacheAll } = require('./invites');
 
 /**
  * Cycle de vie du bot : démarrage, arrêt, reconnexions, limites de débit, permissions manquantes, erreurs.
- * Tout est envoyé dans la catégorie « server ».
+ * Tout est envoyé dans la catégorie « bot ».
  */
 module.exports = (Client) => {
     const post = (title, description, color) => {
         const embed = new EmbedBuilder().setTitle(title).setDescription(clip(description, 3500));
         if (color) embed.setColor(color);
-        emitLog(Client, 'server', embed);
+        emitLog(Client, 'bot', embed);
     };
 
     // Démarrage
