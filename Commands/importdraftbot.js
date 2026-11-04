@@ -1,6 +1,7 @@
 const { EmbedBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const axios = require('axios');
 const { levelFromXp } = require('../Utility/levels');
+const { syncGuildRewards } = require('../Utility/levelRewards');
 
 const API = 'https://api.draftbot.fr/activities/levels';
 const MAX_PAGES = 500;      // garde-fou
@@ -100,6 +101,9 @@ module.exports = {
 
             await Client.Levels.bulkCreate(rows, { updateOnDuplicate: ['xp', 'level'] });
 
+            // Les membres importés reçoivent les rôles de récompense correspondant à leur niveau
+            const rewardSync = await syncGuildRewards(Client, guild);
+
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
@@ -109,6 +113,7 @@ module.exports = {
                             `**${created}** membre(s) ajouté(s)`,
                             `**${updated}** membre(s) mis à jour (XP DraftBot supérieure à l'actuelle)`,
                             `**${unchanged}** membre(s) inchangé(s) (XP actuelle déjà égale ou supérieure)`,
+                            rewardSync.roles ? `🎁 **${rewardSync.roles}** rôle(s) de récompense attribué(s) à **${rewardSync.members}** membre(s)` : null,
                             includeLeft ? null : `**${skippedLeft}** membre(s) ayant quitté le serveur ignoré(s)`
                         ].filter(Boolean).join('\n'))
                         .setFooter({ text: `${leaderboard.length} membres dans le classement DraftBot` })
