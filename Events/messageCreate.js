@@ -5,6 +5,7 @@ const zlib = require('zlib');
 const { createChatCompletion } = require('../Utility/llmProvider');
 const { handleChannelMessage } = require('../Utility/aiChat');
 const { handleMessageXp } = require('../Utility/levels');
+const { maybeSpawn } = require('../Utility/collect');
 const { handleContentModeration } = require('../Utility/contentModeration');
 
 // Map pour stocker les données de spam (en mémoire)
@@ -345,7 +346,9 @@ module.exports = async (Client, message) => {
 
     // --- Système de niveaux : pas d'XP pour les messages détectés comme spam/arnaque ---
     if (!spamType && !scamType) {
-        handleMessageXp(Client, message).catch(err => Client.log?.warn?.(`[Niveaux] ${err.message}`));
+        handleMessageXp(Client, message).catch(err => Client.log?.warning?.(`[Niveaux] ${err.message}`));
+        // Évènements de collecte : l'émoji peut apparaître en réaction sous ce message
+        maybeSpawn(Client, message).catch(err => Client.log?.warning?.(`[Collecte] ${err.message}`));
     }
 
     // Si un spam, une arnaque ou du contenu IA est détecté
