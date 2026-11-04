@@ -65,6 +65,11 @@ module.exports = async (Client, interaction) => {
     if (interaction.isModalSubmit()) {
         let modal = Client.modals.get(interaction.customId);
 
+        // IDs dynamiques (ex: replyQuestion_1730000000000) : on retombe sur le préfixe
+        if (!modal && interaction.customId.includes('_')) {
+            modal = Client.modals.get(interaction.customId.split('_')[0]);
+        }
+
         if (modal) {
             try {
                 modal(Client, interaction);

@@ -3,7 +3,8 @@ const { ThreadAutoArchiveDuration, EmbedBuilder, MessageFlags} = require("discor
 module.exports = async (Client, interaction) => {
     let question = interaction.fields.getTextInputValue('question');
     let reply = interaction.fields.getTextInputValue('reply');
-    let msgId = interaction.fields.getTextInputValue('msgId');
+    // L'ID du message est porté par le customId (replyQuestion_<id>) : le modérateur ne peut pas le modifier
+    let msgId = interaction.customId.split('_')[1];
 
     let message = await interaction.channel.messages.fetch(msgId);
     if (message) {
