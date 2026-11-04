@@ -111,6 +111,22 @@ module.exports = async (Client) => {
         }
     }).sync({ alter: true });
 
+    // Exceptions à l'horaire de fermeture des salons (ex : réveillon du nouvel an)
+    Client.CloseExceptions = await Client.db.define('closeexceptions', {
+        date: {
+            type: sequelize.STRING, // AAAA-MM-JJ : jour où la fermeture normale aurait lieu
+            primaryKey: true
+        },
+        closeTime: {
+            type: sequelize.STRING, // HHhMM
+            allowNull: false
+        },
+        createdBy: {
+            type: sequelize.STRING,
+            allowNull: true
+        }
+    }).sync({ alter: true });
+
     Client.Timeouts = await Client.db.define('timeouts', {
         id: {
             type: sequelize.INTEGER,

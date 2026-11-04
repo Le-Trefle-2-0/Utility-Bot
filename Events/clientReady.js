@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const ms = require('ms');
 const { initializeLLMProvider } = require('../Utility/llmProvider');
 const ticketsMaintenance = require('../Utility/ticketsMaintenance');
+const closeExceptions = require('../Utility/closeExceptions');
 
 module.exports = async (Client) => {
     disableValidators();
@@ -18,7 +19,50 @@ module.exports = async (Client) => {
         status: PresenceUpdateStatus.Online
     })
 
+    // Avertissement avant fermeture des salons vocaux
+    const WARNING_DELAY = 5 * 60 * 1000;
+    Client.closeAt = null;
+    Client.closeWarned = new Set();
+
+    Client.getClosableVoiceChannels = () => {
+        const guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
+        if (!guild) return [];
+        const ids = new Set(Object.values(Client.settings.toClose.roles).flat());
+        return [...ids].map(id => guild.channels.cache.get(id)).filter(channel => channel?.type === 2);
+    };
+
+    Client.warnVoiceChannel = async (channel) => {
+        if (!Client.closeAt || Client.closeWarned.has(channel.id) || channel.members.size === 0) return;
+        Client.closeWarned.add(channel.id);
+        const closeTimestamp = Math.floor(Client.closeAt / 1000);
+        try {
+            await channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('⚠️ Fermeture imminente des salons')
+                        .setDescription(`Les salons vocaux et textuels vont fermer <t:${closeTimestamp}:R> (à <t:${closeTimestamp}:t>).\n\nÀ l'heure de la fermeture, **toutes les personnes encore connectées en vocal seront déconnectées automatiquement**. Pensez à finir votre conversation !`)
+                        .setColor('f0a132')
+                ]
+            });
+        } catch (err) {
+            Client.closeWarned.delete(channel.id);
+            Client.log.error(err);
+        }
+    };
+
+    Client.startCloseWarning = async () => {
+        const now = new Date();
+        now.setSeconds(0, 0);
+        Client.closeAt = now.getTime() + WARNING_DELAY;
+        Client.closeWarned.clear();
+        for (const channel of Client.getClosableVoiceChannels()) {
+            await Client.warnVoiceChannel(channel);
+        }
+    };
+
     Client.closeChannels = async () => {
+        Client.closeAt = null;
+        Client.closeWarned.clear();
         for (let role of Object.keys(Client.settings.toClose.roles)) {
             let guild = Client.guilds.cache.get(process.env.MAIN_GUILD_ID);
             if (guild) {
@@ -43,9 +87,9 @@ module.exports = async (Client) => {
                                         SendMessages: false,
                                         Connect: false
                                     });
-                                    channel.members.forEach(member => {
-                                        member.voice.disconnect();
-                                    });
+                                    await Promise.all(channel.members.map(member =>
+                                        member.voice.disconnect('Fermeture programmée des salons').catch(err => Client.log.error(err))
+                                    ));
                                     break;
                             }
                             
@@ -135,47 +179,42 @@ module.exports = async (Client) => {
     }
 
     if (Client.settings.toClose.schedule) {
-        for (let weekDay of Object.keys(Client.settings.toClose.schedule)) {
-            let openTime = Client.settings.toClose.schedule[weekDay][0] || Client.settings.toClose.schedule.default[0];
-            let closeTime = Client.settings.toClose.schedule[weekDay][1] || Client.settings.toClose.schedule.default[1];
-            switch (weekDay) {
-                case 'monday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 1`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 1`, () => Client.closeChannels());
-                    break;
+        const days = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+        const defaults = Client.settings.toClose.schedule.default;
+        for (let weekDay of Object.keys(days)) {
+            const daySchedule = Client.settings.toClose.schedule[weekDay];
+            let openTime = daySchedule?.[0] || defaults?.[0];
+            let closeTime = daySchedule?.[1] || defaults?.[1];
+            if (!openTime || !closeTime) continue;
 
-                case 'tuesday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 2`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 2`, () => Client.closeChannels());
-                    break;
+            const [openH, openM] = openTime.split('h');
+            const [closeH, closeM] = closeTime.split('h');
+            const day = days[weekDay];
+            scheduleJob(`${openM} ${openH} * * ${day}`, () => Client.openChannels());
+            scheduleJob(`${closeM} ${closeH} * * ${day}`, async () => {
+                if (await closeExceptions.getException(Client, new Date())) return; // fermeture reportée par une exception
+                Client.closeChannels();
+            });
 
-                case 'wednesday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 3`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 3`, () => Client.closeChannels());
-                    break;
-
-                case 'thursday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 4`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 4`, () => Client.closeChannels());
-                    break;
-
-                case 'friday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 5`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 5`, () => Client.closeChannels());
-                    break;
-                
-                case 'saturday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 6`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 6`, () => Client.closeChannels());
-                    break;
-
-                case 'sunday':
-                    scheduleJob(`${openTime.split('h')[1]} ${openTime.split('h')[0]} * * 0`, () => Client.openChannels());
-                    scheduleJob(`${closeTime.split('h')[1]} ${closeTime.split('h')[0]} * * 0`, () => Client.closeChannels());
-                    break;
+            // Avertissement 5 minutes avant la fermeture (peut passer sur la veille)
+            let warnMinutes = parseInt(closeH) * 60 + parseInt(closeM) - WARNING_DELAY / 60000;
+            let warnDay = day;
+            let daysAhead = 0; // la fermeture a lieu `daysAhead` jour(s) après l'avertissement
+            if (warnMinutes < 0) {
+                warnMinutes += 24 * 60;
+                warnDay = (day + 6) % 7;
+                daysAhead = 1;
             }
+            scheduleJob(`${warnMinutes % 60} ${Math.floor(warnMinutes / 60)} * * ${warnDay}`, async () => {
+                const closeDate = new Date();
+                closeDate.setDate(closeDate.getDate() + daysAhead);
+                if (await closeExceptions.getException(Client, closeDate)) return;
+                Client.startCloseWarning();
+            });
         }
     }
+
+    closeExceptions.scheduleAll(Client);
 
     // Client.musicPlayer.init(Client);
 
