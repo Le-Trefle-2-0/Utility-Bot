@@ -1,4 +1,5 @@
 const { PermissionsBitField, MessageFlags } = require('discord.js');
+const { setModContext } = require('../Utility/logging/audit');
 const { disableButtons } = require('../Utility/modscanActions');
 
 const DURATION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -19,6 +20,7 @@ module.exports = async (Client, interaction) => {
         if (!member) return interaction.editReply({ content: "Ce membre n'est plus sur le serveur." });
         if (!member.moderatable) return interaction.editReply({ content: "Je ne peux pas exclure ce membre (rôle supérieur ou permissions insuffisantes)." });
 
+        setModContext(Client, userId, 'timeout', { moderatorId: interaction.user.id, reason: REASON });
         await member.timeout(DURATION_MS, REASON);
         await Client.ModLogs.create({
             userID: userId,

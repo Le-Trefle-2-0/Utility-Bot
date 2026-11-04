@@ -1,3 +1,5 @@
+const { runLogged } = require('../Utility/logging/commandLog');
+
 module.exports = async (Client, interaction) => {
     if (interaction.guildId !== Client.settings.mainGuildID) return;
 
@@ -41,7 +43,7 @@ module.exports = async (Client, interaction) => {
 
         if (command) {
             try {
-                command.run(Client, interaction)
+                await runLogged(Client, interaction, () => command.run(Client, interaction));
             } catch (e) {
                 if (e) Client.log.error(e);
             }
@@ -53,7 +55,7 @@ module.exports = async (Client, interaction) => {
 
         if (contextMenu) {
             try {
-                contextMenu.run(Client, interaction);
+                await runLogged(Client, interaction, () => contextMenu.run(Client, interaction));
             } catch (e) {
                 if (e) Client.log.error(e);
             }

@@ -355,16 +355,5 @@ module.exports = async (Client) => {
     // Suivi des tickets : suppression différée, rappels, fermeture si le membre est parti
     ticketsMaintenance.start(Client);
 
-    // Invite tracking
-    Client.invites = new Map();
-    const mainGuild = Client.guilds.cache.get(Client.settings.mainGuildID);
-    if (mainGuild) {
-        try {
-            const guildInvites = await mainGuild.invites.fetch();
-            Client.invites.set(mainGuild.id, new Map(guildInvites.map(invite => [invite.code, invite.uses])));
-            Client.log.info(`Cached ${guildInvites.size} invites for guild ${mainGuild.id}`);
-        } catch (err) {
-            Client.log.error(`Failed to fetch invites for guild ${mainGuild.id}:`, err);
-        }
-    }
+    // Le suivi des invitations est initialisé dans Utility/logging/botLifecycle.js
 }

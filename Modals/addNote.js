@@ -44,6 +44,8 @@ module.exports = async (Client, interaction) => {
             type: 'Note'
         });
 
+        await require('../Utility/logging/modLog').logSanction(Client, { title: '📝 Note de modération ajoutée', guild: interaction.guild, target: targetMember.user, moderatorId: interaction.user.id, reason: reason.slice(0, 1000), color: '9bd2d2' });
+
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()

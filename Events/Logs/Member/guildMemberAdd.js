@@ -3,24 +3,21 @@ const {Op} = require("sequelize");
 const {MessageFlags, EmbedBuilder, ChannelType} = require("discord.js");
 const {scheduleJob} = require("node-schedule");
 const { createChatCompletion } = require("../../../Utility/llmProvider");
+const { resolveUsedInvite } = require("../../../Utility/logging/invites");
 
 module.exports = async (Client, member) => {
-    // Determine inviter
-    let inviterText = "Inconnu ou via vanité";
+    // Invitation utilisée (déduite en comparant les compteurs d'utilisation avant / après l'arrivée)
+    let inviterText = "Inconnue";
     try {
-        const cachedInvites = Client.invites.get(member.guild.id);
-        const newInvites = await member.guild.invites.fetch();
-        
-        const invite = newInvites.find(i => cachedInvites.get(i.code) < i.uses);
-        if (invite) {
-            inviterText = `<@${invite.inviter.id}> (Code: \`${invite.code}\`)`;
-            cachedInvites.set(invite.code, invite.uses);
-        } else if (member.guild.features.includes('VANITY_URL')) {
-            // Check vanity URL if possible
-            // Note: discord.js doesn't provide a direct way to track vanity uses easily without caching it too
+        const used = await resolveUsedInvite(Client, member.guild);
+        if (used?.vanity) {
+            inviterText = `URL personnalisée (\`${used.code}\`)`;
+        } else if (used) {
+            const creator = used.inviterId ? `<@${used.inviterId}> (\`${used.inviterId}\`)` : 'créateur inconnu';
+            inviterText = `Code \`${used.code}\` — créée par ${creator} — ${used.uses} utilisation(s)${used.channelId ? ` — salon <#${used.channelId}>` : ''}`;
         }
     } catch (err) {
-        Client.log?.error('Error finding inviter:', err);
+        Client.log?.error(`Error finding inviter: ${err.message}`);
     }
 
     let previousSoftban = await Client.ModLogs.findAll({
@@ -88,7 +85,7 @@ module.exports = async (Client, member) => {
         })
         .setDescription(
             `👤 **Membre :** <@${member.id}> (\`${member.id}\`)\n` +
-            `✉️ **Invité par :** ${inviterText}\n` +
+            `✉️ **Invitation :** ${inviterText}\n` +
             `📅 **Compte créé le :** <t:${Math.floor(member.user.createdTimestamp / 1000)}:f> (<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)\n` +
             `📊 **Âge du compte :** ${ms(Date.now()-member.user.createdTimestamp)}${sb ? '\n⚠️ **Soft-ban réactivé automatiquement**' : ''}`
         )
@@ -96,7 +93,7 @@ module.exports = async (Client, member) => {
 
     Client.emit('logs', 'member', embed);
 
-    if (!sb) {
+    if (!sb && !member.user.bot) {
         try {
             await sendWelcomeThread(Client, member);
         } catch (err) {

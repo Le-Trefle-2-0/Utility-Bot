@@ -1,9 +1,10 @@
-const { Client, Collection, Partials } = require('discord.js');
+const { Client, Collection, Partials, GatewayIntentBits } = require('discord.js');
 const { algoliasearch } = require('algoliasearch');
 
 const client = new Client({ 
-    intents: 131071, 
-    partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.Reaction, Partials.User] 
+    // 131071 = toutes les intents sauf AutoMod, ajoutées pour journaliser les règles et les actions AutoMod
+    intents: 131071 | GatewayIntentBits.AutoModerationConfiguration | GatewayIntentBits.AutoModerationExecution, 
+    partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.Reaction, Partials.User, Partials.ThreadMember, Partials.GuildScheduledEvent] 
 });
 
 client.commands = new Collection();

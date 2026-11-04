@@ -153,6 +153,25 @@ module.exports = async (Client) => {
         ]
     }).sync({ alter: true });
 
+    // Historique des arrivées / départs (détection des membres de retour, temps passé sur le serveur)
+    Client.MemberHistory = await Client.db.define('memberhistory', {
+        userID: { type: sequelize.STRING, primaryKey: true },
+        guildID: { type: sequelize.STRING, primaryKey: true },
+        joinCount: { type: sequelize.INTEGER, allowNull: false, defaultValue: 0 },
+        firstJoinedAt: { type: sequelize.DATE, allowNull: true },
+        lastJoinedAt: { type: sequelize.DATE, allowNull: true },
+        lastLeftAt: { type: sequelize.DATE, allowNull: true },
+        lastRoles: { type: sequelize.TEXT, allowNull: true }
+    }).sync({ alter: true });
+
+    // Temps cumulé passé en vocal par membre (statistiques)
+    Client.VoiceTime = await Client.db.define('voicetime', {
+        userID: { type: sequelize.STRING, primaryKey: true },
+        guildID: { type: sequelize.STRING, primaryKey: true },
+        seconds: { type: sequelize.INTEGER, allowNull: false, defaultValue: 0 },
+        sessions: { type: sequelize.INTEGER, allowNull: false, defaultValue: 0 }
+    }).sync({ alter: true });
+
     Client.Timeouts = await Client.db.define('timeouts', {
         id: {
             type: sequelize.INTEGER,

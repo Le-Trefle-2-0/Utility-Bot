@@ -1,4 +1,5 @@
 const { PermissionsBitField, MessageFlags } = require('discord.js');
+const { setModContext } = require('../Utility/logging/audit');
 const { disableButtons } = require('../Utility/modscanActions');
 
 const REASON = 'Arnaque détectée par la modération IA';
@@ -17,6 +18,8 @@ module.exports = async (Client, interaction) => {
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
         if (member && !member.bannable) return interaction.editReply({ content: "Je ne peux pas bannir ce membre (rôle supérieur ou permissions insuffisantes)." });
 
+        // Le bot applique le ban : on indique aux logs qui est le vrai modérateur
+        setModContext(Client, userId, 'ban', { moderatorId: interaction.user.id, reason: REASON, deleteMessageSeconds: 3600 });
         // Supprime aussi les messages de la dernière heure (le scammer a souvent posté ailleurs)
         await interaction.guild.members.ban(userId, { reason: REASON, deleteMessageSeconds: 3600 });
         await Client.ModLogs.create({
