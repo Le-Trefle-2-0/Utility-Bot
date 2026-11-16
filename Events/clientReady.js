@@ -7,6 +7,7 @@ const { initializeLLMProvider } = require('../Utility/llmProvider');
 const ticketsMaintenance = require('../Utility/ticketsMaintenance');
 const closeExceptions = require('../Utility/closeExceptions');
 const modVoice = require('../Utility/modVoice');
+const memberVerification = require('../Utility/memberVerification');
 const { startTicker: startCollectTicker } = require('../Utility/collect');
 
 module.exports = async (Client) => {
@@ -224,6 +225,7 @@ module.exports = async (Client) => {
 
     closeExceptions.scheduleAll(Client);
     modVoice.start(Client);
+    memberVerification.start(Client);
 
     // Client.musicPlayer.init(Client);
 
@@ -342,7 +344,9 @@ module.exports = async (Client) => {
     try {
         await rest.put(
             Routes.applicationCommands(Client.user.id),
-            { body: commands }
+            // Installation sur le serveur (0) explicite : sans cela, Discord applique le réglage par défaut du
+            // portail développeur, qui peut être « installation utilisateur » (commandes visibles en MP seulement)
+            { body: commands.map(command => ({ ...command, integration_types: [0] })) }
         );
 
         for (let i in guildCommands) {
