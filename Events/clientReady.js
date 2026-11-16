@@ -11,6 +11,8 @@ const { startTicker: startCollectTicker } = require('../Utility/collect');
 
 module.exports = async (Client) => {
     disableValidators();
+    // Les modèles de base de données sont créés de manière asynchrone au démarrage
+    await Client.dbReady;
     Client.log.info('WebSocket connection to Discord has been established');
     await initializeLLMProvider(Client);
 

@@ -5,6 +5,14 @@ const {Op} = require("sequelize");
 const ms = require("ms");
 
 module.exports = async (Client) => {
+    // Résolu une fois tous les modèles créés : clientReady l'attend avant d'utiliser Client.Tickets, etc.
+    let markReady;
+    Client.dbReady = new Promise((resolve, reject) => {
+        markReady = resolve;
+        Client.failDb = reject;
+    });
+    Client.dbReady.catch(() => {});
+
     Client.db = new sequelize({
         dialect: 'sqlite',
         storage: './database.sqlite',
@@ -354,6 +362,8 @@ module.exports = async (Client) => {
     }
 
 
+
+    markReady();
 
     let timeouts = await Client.Timeouts.findAll();
     for (let timeout of timeouts) {
