@@ -10,6 +10,34 @@ const colors = {
 };
 
 /**
+ * Les pseudos changent, pas les identifiants : chaque membre mentionné (<@id>) dans un log doit aussi
+ * apparaître en clair, pour pouvoir retrouver son historique en cherchant son identifiant.
+ * Les identifiants absents du texte sont ajoutés au pied de page.
+ */
+const MENTION = /<@!?(\d{17,20})>/g;
+
+const embedTexts = (embed) => {
+    const data = embed.data || {};
+    return [data.title, data.description, data.author?.name, data.footer?.text,
+        ...(data.fields || []).flatMap(field => [field.name, field.value])].filter(Boolean);
+};
+
+const ensureUserIDs = (embed) => {
+    const texts = embedTexts(embed);
+    const ids = new Set(texts.flatMap(text => [...text.matchAll(MENTION)].map(match => match[1])));
+    if (!ids.size) return;
+
+    const plain = texts.join(' ').replace(MENTION, '');
+    const missing = [...ids].filter(id => !plain.includes(id)).slice(0, 10);
+    if (!missing.length) return;
+
+    const label = missing.length > 1 ? 'IDs' : 'ID';
+    const existing = embed.data.footer?.text;
+    const text = `${existing ? `${existing} • ` : ''}${label} : ${missing.join(', ')}`.slice(0, 2048);
+    embed.setFooter({ text, iconURL: embed.data.footer?.icon_url });
+};
+
+/**
  * Envoie un log dans le salon de la catégorie demandée (member, server, textual, voice, moderation, bot ; « bot » retombe sur « server » s'il n'est pas configuré).
  *
  * Signature actuelle : (Client, category, embed | embed[], components?, files?)
@@ -39,6 +67,7 @@ module.exports = async (Client, category, embeds, ...rest) => {
         for (const embed of embedArray) {
             if (!embed.data.color) embed.setColor(colors[category]);
             if (!embed.data.timestamp) embed.setTimestamp();
+            ensureUserIDs(embed);
         }
 
         await channel.send({ embeds: embedArray, components, files, allowedMentions: { parse: [] } });
