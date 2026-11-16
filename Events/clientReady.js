@@ -344,7 +344,9 @@ module.exports = async (Client) => {
     try {
         await rest.put(
             Routes.applicationCommands(Client.user.id),
-            { body: commands }
+            // Installation sur le serveur (0) explicite : sans cela, Discord applique le réglage par défaut du
+            // portail développeur, qui peut être « installation utilisateur » (commandes visibles en MP seulement)
+            { body: commands.map(command => ({ ...command, integration_types: [0] })) }
         );
 
         for (let i in guildCommands) {
