@@ -7,6 +7,7 @@ const { initializeLLMProvider } = require('../Utility/llmProvider');
 const ticketsMaintenance = require('../Utility/ticketsMaintenance');
 const closeExceptions = require('../Utility/closeExceptions');
 const modVoice = require('../Utility/modVoice');
+const memberVerification = require('../Utility/memberVerification');
 const { startTicker: startCollectTicker } = require('../Utility/collect');
 
 module.exports = async (Client) => {
@@ -224,6 +225,7 @@ module.exports = async (Client) => {
 
     closeExceptions.scheduleAll(Client);
     modVoice.start(Client);
+    memberVerification.start(Client);
 
     // Client.musicPlayer.init(Client);
 
