@@ -11,7 +11,7 @@ const isModerator = (Client, member) =>
 async function doSync(Client, channel) {
     const everyone = channel.guild.roles.everyone;
     const hasMod = channel.members.some(member => isModerator(Client, member));
-    const isOpen = channel.permissionOverwrites.cache.get(everyone.id)?.allow.has(CONNECT) ?? false;
+const isOpen = channel.permissionsFor(everyone)?.has(CONNECT) ?? false;
 
     if (hasMod) {
         if (!isOpen) {
