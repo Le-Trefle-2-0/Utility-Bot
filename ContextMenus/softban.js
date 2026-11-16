@@ -41,6 +41,13 @@ module.exports = {
                 type: `Softban ${newDuration}`
             });
 
+            const { logSanction } = require('../Utility/logging/modLog');
+            await logSanction(Client, {
+                title: '🚫 Softban', guild: interaction.guild, target: interaction.targetUser, moderatorId: interaction.user.id, reason: 'Softban',
+                details: `**Durée :** ${newDuration} (fin <t:${Math.round((Date.now() + ms(newDuration)) / 1000)}:R>)`
+            });
+            scheduleJob(new Date(Date.now() + ms(newDuration)), () => logSanction(Client, { title: '⏰ Softban terminé (expiration)', guild: interaction.guild, target: interaction.targetUser, color: '2e7d32' }));
+
             for (let role of Object.keys(Client.settings.toClose.roles)) {
                 for (let channelID of Client.settings.toClose.roles[role]) {
                     let channel = member.guild.channels.cache.get(channelID);

@@ -111,6 +111,179 @@ module.exports = async (Client) => {
         }
     }).sync({ alter: true });
 
+    // Exceptions à l'horaire de fermeture des salons (ex : réveillon du nouvel an)
+    Client.CloseExceptions = await Client.db.define('closeexceptions', {
+        date: {
+            type: sequelize.STRING, // AAAA-MM-JJ : jour où la fermeture normale aurait lieu
+            primaryKey: true
+        },
+        closeTime: {
+            type: sequelize.STRING, // HHhMM
+            allowNull: false
+        },
+        createdBy: {
+            type: sequelize.STRING,
+            allowNull: true
+        }
+    }).sync({ alter: true });
+
+    // Migration : la première version de ces tables n'avait pas de colonne `id` (clé composite, qui
+    // rendait chaque colonne UNIQUE sous SQLite). On les recrée en conservant les données.
+    const legacyRows = {};
+    for (const table of ['levels', 'levelrewards']) {
+        try {
+            const columns = await Client.db.getQueryInterface().describeTable(table);
+            if (!columns.id) {
+                legacyRows[table] = await Client.db.query(`SELECT * FROM \`${table}\``, { type: sequelize.QueryTypes.SELECT });
+                await Client.db.getQueryInterface().dropTable(table);
+            }
+        } catch (e) {
+            // la table n'existe pas encore : rien à migrer
+        }
+    }
+
+    // Système de niveaux : XP cumulée par membre et par serveur
+    // sync() sans `alter` : l'alter de Sequelize sous SQLite casse les index uniques composites
+    Client.Levels = await Client.db.define('levels', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        userID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        guildID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        xp: {
+            type: sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        level: {
+            type: sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        }
+    }, {
+        indexes: [
+            // Clé composite : un seul enregistrement par membre et par serveur
+            { unique: true, fields: ['userID', 'guildID'] },
+            { fields: ['guildID', 'xp'] }
+        ]
+    }).sync();
+
+    // Rôles offerts en récompense en atteignant un niveau (un rôle par niveau et par serveur)
+    Client.LevelRewards = await Client.db.define('levelrewards', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        guildID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        level: {
+            type: sequelize.INTEGER,
+            allowNull: false
+        },
+        roleID: {
+            type: sequelize.STRING,
+            allowNull: false
+        }
+    }, {
+        indexes: [
+            { unique: true, fields: ['guildID', 'level'] }
+        ]
+    }).sync();
+
+    if (legacyRows.levels?.length) {
+        await Client.Levels.bulkCreate(legacyRows.levels.map(({ userID, guildID, xp, level }) => ({ userID, guildID, xp, level })), { ignoreDuplicates: true });
+    }
+    if (legacyRows.levelrewards?.length) {
+        await Client.LevelRewards.bulkCreate(legacyRows.levelrewards.map(({ guildID, level, roleID }) => ({ guildID, level, roleID })), { ignoreDuplicates: true });
+    }
+
+    // Évènements d'XP multipliée : channelID vaut '*' pour tout le serveur
+    Client.XpEvents = await Client.db.define('xpevents', {
+        id: {
+            type: sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        guildID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        channelID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        multiplier: {
+            type: sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 2
+        },
+        endsAt: {
+            type: sequelize.DATE,
+            allowNull: false
+        },
+        createdBy: {
+            type: sequelize.STRING,
+            allowNull: true
+        }
+    }, {
+        indexes: [
+            { unique: true, fields: ['guildID', 'channelID'] }
+        ]
+    }).sync();
+
+    // Évènements de collecte (ex : cadeaux de Noël) : des émojis apparaissent en réaction, le premier à cliquer le gagne
+    Client.CollectEvents = await Client.db.define('collectevents', {
+        id: { type: sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+        guildID: { type: sequelize.STRING, allowNull: false },
+        name: { type: sequelize.STRING, allowNull: false },
+        emoji: { type: sequelize.STRING, allowNull: false },       // tel que saisi : 🎁 ou <:nom:id>
+        startsAt: { type: sequelize.DATE, allowNull: false },
+        endsAt: { type: sequelize.DATE, allowNull: false },
+        spawnEvery: { type: sequelize.INTEGER, allowNull: false, defaultValue: 30 }, // ~1 émoji tous les N messages
+        channelID: { type: sequelize.STRING, allowNull: true },    // null = tous les salons
+        announceChannelID: { type: sequelize.STRING, allowNull: true },
+        startAnnounced: { type: sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+        endAnnounced: { type: sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+        createdBy: { type: sequelize.STRING, allowNull: true }
+    }, {
+        indexes: [{ fields: ['guildID', 'startsAt', 'endsAt'] }]
+    }).sync();
+
+    Client.CollectScores = await Client.db.define('collectscores', {
+        id: { type: sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+        eventID: { type: sequelize.INTEGER, allowNull: false },
+        userID: { type: sequelize.STRING, allowNull: false },
+        count: { type: sequelize.INTEGER, allowNull: false, defaultValue: 0 }
+    }, {
+        indexes: [
+            { unique: true, fields: ['eventID', 'userID'] },
+            { fields: ['eventID', 'count'] }
+        ]
+    }).sync();
+
+    // Émojis posés par le bot, en attente d'un premier clic
+    Client.CollectDrops = await Client.db.define('collectdrops', {
+        id: { type: sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+        eventID: { type: sequelize.INTEGER, allowNull: false },
+        messageID: { type: sequelize.STRING, allowNull: false },
+        channelID: { type: sequelize.STRING, allowNull: false },
+        expiresAt: { type: sequelize.DATE, allowNull: false },
+        claimedBy: { type: sequelize.STRING, allowNull: true }
+    }, {
+        indexes: [{ unique: true, fields: ['messageID'] }]
+    }).sync();
+
     Client.Timeouts = await Client.db.define('timeouts', {
         id: {
             type: sequelize.INTEGER,

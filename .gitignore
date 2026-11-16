@@ -1,5 +1,7 @@
 # Logs
 logs
+# Source des handlers de logs Discord (sinon ignoré par la règle ci-dessus)
+!Events/Logs/
 *.log
 npm-debug.log*
 yarn-debug.log*

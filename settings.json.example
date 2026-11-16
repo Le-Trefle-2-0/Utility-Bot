@@ -1,4 +1,12 @@
 {
+  "logs": {
+    "member": "CHANNEL_ID",
+    "server": "CHANNEL_ID",
+    "textual": "CHANNEL_ID",
+    "voice": "CHANNEL_ID",
+    "moderation": "CHANNEL_ID",
+    "bot": "CHANNEL_ID"
+  },
   "llm": {
     "providerBaseUrl": "https://api.groq.com/openai/v1",
     "primaryModel": "qwen/qwen3.8-27b",
@@ -19,6 +27,14 @@
     "cooldownSeconds": 60,
     "maxRepliesPerHour": 12,
     "followUpSeconds": 120
+  },
+  "contentModeration": {
+    "enabled": true,
+    "model": "vllm-sr/d3-flash",
+    "timeoutSeconds": 5,
+    "minLength": 12,
+    "thresholds": { "scam": 0.7, "personalInfo": 0.6, "inappropriate": 0.6 },
+    "ignoredChannels": []
   },
   "tickets": {
     "categoryID": "YOUR_CATEGORY_ID_HERE",
@@ -56,5 +72,13 @@
     "roles": {
       "roleID": ["channelToCloseID", "channelToClose2ID..."]
     }
+  },
+  "modVoice": {
+    "moderatorRoleIDs": ["MODERATOR_ROLE_ID"],
+    "channelIDs": ["VOICE_CHANNEL_ID"],
+    "sweepMinutes": 5
+  },
+  "collect": {
+    "ignoredChannelIDs": ["SALON_OU_CATEGORIE_A_EXCLURE_1", "SALON_OU_CATEGORIE_A_EXCLURE_2"]
   }
 }

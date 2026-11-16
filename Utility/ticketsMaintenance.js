@@ -19,6 +19,10 @@ const transcriptHost = require('./transcriptHost');
 const { ticketRow } = require('./ticketsComponents');
 const { closeTicket, deleteChannelWithRetry } = require('./ticketsClose');
 
+// Notifications dans les tickets (rappels équipe / staff, avis de départ du staff) désactivées
+// temporairement, en attendant leur refonte. Passer à true pour les réactiver.
+const NOTIFICATIONS_ENABLED = false;
+
 const HOUR_MS = 60 * 60 * 1000;
 const UNKNOWN_CHANNEL = 10003;
 const UNKNOWN_MEMBER = 10007;
@@ -55,6 +59,8 @@ const releaseTicket = async (Client, ticket, channel) => {
     for (const pin of pins?.values() ?? []) {
         if (pin.components?.length) await pin.edit({ components: [ticketRow()] }).catch(() => {});
     }
+
+    if (!NOTIFICATIONS_ENABLED) return;
 
     const teamRoles = ticketsConfig.getTeamRoles(ticket.assignedTeam);
     await channel.send({
@@ -201,7 +207,7 @@ const checkOpenTickets = async (Client, guild) => {
                 await releaseTicket(Client, ticket, channel);
             }
 
-            await sendReminders(Client, guild, channel, ticket, settings);
+            if (NOTIFICATIONS_ENABLED) await sendReminders(Client, guild, channel, ticket, settings);
         } catch (error) {
             ticketsLogger.logError(`ticketCheck:${ticket.id}`, error);
         }

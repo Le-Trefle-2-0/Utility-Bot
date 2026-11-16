@@ -1,6 +1,7 @@
 const { EmbedBuilder, MessageFlags } = require("discord.js");
 const ms = require('ms')
 const { scheduleJob } = require('node-schedule');
+const { logSanction } = require('../Utility/logging/modLog');
 
 module.exports = async (Client, interaction) => {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -29,7 +30,13 @@ module.exports = async (Client, interaction) => {
             type: 'Timeout'
         });
 
+        await logSanction(Client, {
+            title: '⏳ Exclusion temporaire', guild: interaction.guild, target: member.user, moderatorId: interaction.user.id, reason,
+            details: `**Durée :** ${duration} (fin <t:${Math.round((Date.now() + durationTimestamp) / 1000)}:R>)`
+        });
+
         scheduleJob(new Date(Date.now() + durationTimestamp), () => {
+            logSanction(Client, { title: '⏰ Exclusion temporaire terminée (expiration)', guild: interaction.guild, target: member.user, color: '2e7d32' });
             member.user.send({
                 embeds: [
                     new EmbedBuilder()

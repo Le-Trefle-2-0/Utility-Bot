@@ -32,10 +32,11 @@ const getDecisionSettings = (Client) => {
  * @param {string} options.state - la situation sur laquelle portent les questions
  * @param {Object} options.questions - questions au format System One (choice, score…)
  * @param {number} [options.timeoutMs] - remplace le délai par défaut
+ * @param {string} [options.model] - remplace le modèle par défaut (ex. d3-flash)
  * @returns {Promise<Object>} les réponses, indexées par nom de question
  * @throws si la clé manque, si le service répond une erreur ou une réponse inattendue
  */
-const askDecisionModel = async (Client, { state, questions, timeoutMs }) => {
+const askDecisionModel = async (Client, { state, questions, timeoutMs, model }) => {
     const settings = getDecisionSettings(Client);
     if (!settings.apiKey) throw new Error('Decision model API key is not configured');
 
@@ -45,7 +46,7 @@ const askDecisionModel = async (Client, { state, questions, timeoutMs }) => {
             'Authorization': ['Bearer', settings.apiKey].join(' '),
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ model: settings.model, state, questions }),
+        body: JSON.stringify({ model: model || settings.model, state, questions }),
         signal: AbortSignal.timeout(timeoutMs ?? settings.timeoutMs)
     });
 

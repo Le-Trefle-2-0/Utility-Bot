@@ -1,8 +1,7 @@
+const { snapshot, guildCache } = require('../Utility/logging/invites');
+
+// Maintient le cache des invitations (voir Utility/logging/invites.js)
 module.exports = async (Client, invite) => {
     if (invite.guild.id !== Client.settings.mainGuildID) return;
-    
-    const guildInvites = Client.invites.get(invite.guild.id);
-    if (guildInvites) {
-        guildInvites.set(invite.code, invite.uses);
-    }
+    guildCache(Client, invite.guild.id).set(invite.code, snapshot(invite));
 };

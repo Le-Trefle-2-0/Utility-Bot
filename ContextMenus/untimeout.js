@@ -36,6 +36,9 @@ module.exports = {
             ]
         });
         await previousTimeout.destroy();
+        await require('../Utility/logging/modLog').logSanction(Client, {
+            title: '🔓 Exclusion temporaire levée', guild: interaction.guild, target: interaction.targetUser, moderatorId: interaction.user.id, color: '2e7d32'
+        });
         await interaction.reply({
             embeds: [
                 new EmbedBuilder()
