@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 
 const PER_PAGE = 10;
 const MAX_ENTRIES = 100;
@@ -56,7 +56,17 @@ module.exports = {
                 new ButtonBuilder().setCustomId('nextPage').setLabel('Page suivante').setStyle(ButtonStyle.Secondary)
             );
 
-            const message = await interaction.editReply({ embeds: [pages[0]], components: [row] });
+            // Saut direct vers une page (Menus/pageSelect.js) ; Discord limite un menu à 25 options
+            const select = new StringSelectMenuBuilder()
+                .setCustomId('pageSelect')
+                .setPlaceholder('Aller à la page…')
+                .addOptions(pages.slice(0, 25).map((_, i) => {
+                    const first = i * PER_PAGE + 1;
+                    const last = Math.min((i + 1) * PER_PAGE, rows.length);
+                    return { label: `Page ${i + 1}`, description: `Places ${first} à ${last}`, value: String(i) };
+                }));
+
+            const message = await interaction.editReply({ embeds: [pages[0]], components: [row, new ActionRowBuilder().addComponents(select)] });
 
             if (!Client.pages) Client.pages = {};
             Client.pages[message.id] = { pages, pageNumber: 0, requestedBy: interaction.user.id };
