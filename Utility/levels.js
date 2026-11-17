@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { grantRewards } = require('./levelRewards');
 const { getMultiplier } = require('./xpEvents');
 
@@ -40,6 +40,9 @@ async function getPlace(Client, guildID, xp) {
 /** Appelé à chaque message : accorde de l'XP (avec délai) et félicite en cas de passage de niveau. */
 async function handleMessageXp(Client, message) {
     if (!message.guild || message.author.bot) return;
+
+    const everyoneRole = message.guild.roles.everyone;
+    if (!everyoneRole || !message.channel.permissionsFor?.(everyoneRole)?.has(PermissionFlagsBits.ViewChannel)) return;
 
     const key = `${message.guild.id}:${message.author.id}`;
     const now = Date.now();
