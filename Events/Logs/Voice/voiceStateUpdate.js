@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { emitLog, channelRef, duration, isEnabled, sleep } = require('../../../Utility/logging/helpers');
+const { emitLog, channelRef, duration, isEnabled, sleep, isPublicChannel } = require('../../../Utility/logging/helpers');
 const { fetchEntry } = require('../../../Utility/logging/audit');
 const { trackShortVoiceSession } = require('../../../Utility/logging/tracker');
 
@@ -48,11 +48,15 @@ module.exports = async (Client, oldState, newState) => {
     const oldChannel = oldState.channel;
     const newChannel = newState.channel;
 
+    // Seuls les salons publics sont journalisés ; un salon privé n'apparaît jamais dans les logs.
+    const oldPublic = Boolean(oldChannel) && isPublicChannel(Client, oldChannel);
+    const newPublic = Boolean(newChannel) && isPublicChannel(Client, newChannel);
+
     /* ---------- Connexion / déconnexion / changement de salon ---------- */
     if (oldState.channelId !== newState.channelId) {
         if (!oldChannel && newChannel) {
             sessions.set(key, { channelId: newChannel.id, since: Date.now() });
-            emitLog(Client, 'voice', voiceEmbed('🔊 Connexion à un salon vocal', member, `📍 **Salon :** ${channelRef(newChannel)}`));
+            if (newPublic) emitLog(Client, 'voice', voiceEmbed('🔊 Connexion à un salon vocal', member, `📍 **Salon :** ${channelRef(newChannel)}`));
         } else {
             // Fin de session : durée + temps cumulé
             const session = sessions.get(key);
@@ -64,33 +68,44 @@ module.exports = async (Client, oldState, newState) => {
 
             if (oldChannel && !newChannel) {
                 sessions.delete(key);
-                const forcedBy = await findModeratorAction(member.guild, MEMBER_DISCONNECT);
-                emitLog(Client, 'voice', voiceEmbed(forcedBy ? '⛔ Déconnecté d\'un salon vocal par un modérateur' : '🔇 Déconnexion d\'un salon vocal', member,
-                    `📍 **Salon :** ${channelRef(oldChannel)}\n⏱️ **Durée de la session :** ${spent !== null ? duration(spent) : 'inconnue'}` +
-                    (forcedBy ? `\n🛡️ **Par :** <@${forcedBy}>` : '')));
-                if (forcedBy && forcedBy !== member.id) {
-                    emitLog(Client, 'moderation', voiceEmbed('⛔ Déconnexion forcée (vocal)', member, `📍 **Salon :** ${channelRef(oldChannel)}\n🛡️ **Modérateur :** <@${forcedBy}>`));
+                if (oldPublic) {
+                    const forcedBy = await findModeratorAction(member.guild, MEMBER_DISCONNECT);
+                    emitLog(Client, 'voice', voiceEmbed(forcedBy ? '⛔ Déconnecté d\'un salon vocal par un modérateur' : '🔇 Déconnexion d\'un salon vocal', member,
+                        `📍 **Salon :** ${channelRef(oldChannel)}\n⏱️ **Durée de la session :** ${spent !== null ? duration(spent) : 'inconnue'}` +
+                        (forcedBy ? `\n🛡️ **Par :** <@${forcedBy}>` : '')));
+                    if (forcedBy && forcedBy !== member.id) {
+                        emitLog(Client, 'moderation', voiceEmbed('⛔ Déconnexion forcée (vocal)', member, `📍 **Salon :** ${channelRef(oldChannel)}\n🛡️ **Modérateur :** <@${forcedBy}>`));
+                    }
                 }
             } else if (oldChannel && newChannel) {
                 sessions.set(key, { channelId: newChannel.id, since: Date.now() });
-                const movedBy = await findModeratorAction(member.guild, MEMBER_MOVE);
-                emitLog(Client, 'voice', voiceEmbed(movedBy ? '↔️ Déplacé par un modérateur' : '↔️ Changement de salon vocal', member,
-                    `📤 **Ancien salon :** ${channelRef(oldChannel)}\n📥 **Nouveau salon :** ${channelRef(newChannel)}\n⏱️ **Temps passé dans l'ancien :** ${spent !== null ? duration(spent) : 'inconnu'}` +
-                    (movedBy ? `\n🛡️ **Par :** <@${movedBy}>` : '')));
-                if (movedBy && movedBy !== member.id) {
-                    emitLog(Client, 'moderation', voiceEmbed('↔️ Membre déplacé par un modérateur', member, `📤 ${channelRef(oldChannel)} → 📥 ${channelRef(newChannel)}\n🛡️ **Modérateur :** <@${movedBy}>`));
+                if (oldPublic && newPublic) {
+                    const movedBy = await findModeratorAction(member.guild, MEMBER_MOVE);
+                    emitLog(Client, 'voice', voiceEmbed(movedBy ? '↔️ Déplacé par un modérateur' : '↔️ Changement de salon vocal', member,
+                        `📤 **Ancien salon :** ${channelRef(oldChannel)}\n📥 **Nouveau salon :** ${channelRef(newChannel)}\n⏱️ **Temps passé dans l'ancien :** ${spent !== null ? duration(spent) : 'inconnu'}` +
+                        (movedBy ? `\n🛡️ **Par :** <@${movedBy}>` : '')));
+                    if (movedBy && movedBy !== member.id) {
+                        emitLog(Client, 'moderation', voiceEmbed('↔️ Membre déplacé par un modérateur', member, `📤 ${channelRef(oldChannel)} → 📥 ${channelRef(newChannel)}\n🛡️ **Modérateur :** <@${movedBy}>`));
+                    }
+                } else if (oldPublic) {
+                    // Vers un salon privé : on ne journalise que la sortie du salon public
+                    emitLog(Client, 'voice', voiceEmbed('🔇 Déconnexion d\'un salon vocal', member,
+                        `📍 **Salon :** ${channelRef(oldChannel)}\n⏱️ **Durée de la session :** ${spent !== null ? duration(spent) : 'inconnue'}`));
+                } else if (newPublic) {
+                    // Depuis un salon privé : on ne journalise que l'arrivée dans le salon public
+                    emitLog(Client, 'voice', voiceEmbed('🔊 Connexion à un salon vocal', member, `📍 **Salon :** ${channelRef(newChannel)}`));
                 }
             }
         }
 
         // Salon plein / vide
-        if (newChannel?.userLimit && newChannel.members.size >= newChannel.userLimit && !wasFull.get(newChannel.id)) {
+        if (newPublic && newChannel.userLimit && newChannel.members.size >= newChannel.userLimit && !wasFull.get(newChannel.id)) {
             wasFull.set(newChannel.id, true);
             emitLog(Client, 'voice', new EmbedBuilder().setTitle('🈵 Salon vocal complet').setDescription(`${channelRef(newChannel)} a atteint sa limite (${newChannel.userLimit}).`));
         }
         if (oldChannel) {
             if (wasFull.get(oldChannel.id) && oldChannel.members.size < (oldChannel.userLimit || Infinity)) wasFull.delete(oldChannel.id);
-            if (oldChannel.members.filter(m => !m.user.bot).size === 0) {
+            if (oldPublic && oldChannel.members.filter(m => !m.user.bot).size === 0) {
                 emitLog(Client, 'voice', new EmbedBuilder().setTitle('🕳️ Salon vocal vide').setDescription(`${channelRef(oldChannel)} est maintenant vide.`));
             }
         }
@@ -98,7 +113,7 @@ module.exports = async (Client, oldState, newState) => {
     }
 
     /* ---------- Changements d'état dans un même salon ---------- */
-    if (!newChannel) return;
+    if (!newChannel || !newPublic) return;
     const lines = [];
     const channelLine = `📍 **Salon :** ${channelRef(newChannel)}`;
     const toggle = (title, flag, onText, offText) => {
