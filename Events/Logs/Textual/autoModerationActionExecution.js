@@ -12,18 +12,20 @@ const ACTIONS = {
 module.exports = async (Client, execution) => {
     const rule = execution.guild.autoModerationRules.cache.get(execution.ruleId);
     const channel = execution.channelId ? execution.guild.channels.cache.get(execution.channelId) : null;
-    const showContent = channel && isPublicChannel(Client, channel);
+    const isPublic = Boolean(channel) && isPublicChannel(Client, channel);
     const action = ACTIONS[execution.action.type] || 'Action AutoMod';
 
     const common =
         `**Règle :** ${rule ? clip(rule.name, 100) : `\`${execution.ruleId}\``}\n**Action :** ${action}\n` +
         `**Membre :** <@${execution.userId}> (\`${execution.userId}\`)\n**Salon :** ${channel ? channelRef(channel) : '*aucun*'}`;
 
-    emitLog(Client, 'textual', new EmbedBuilder()
-        .setTitle('🛡️ Contenu bloqué par AutoMod')
-        .setDescription(
-            `${common}\n**Mot / motif détecté :** ${clip(execution.matchedKeyword ?? execution.matchedContent, 200)}\n` +
-            `**Contenu :** ${showContent ? clip(execution.content, 1000) : '🔒 masqué (salon non public ou contenu indisponible)'}`
-        ));
+    if (isPublic) {
+        emitLog(Client, 'textual', new EmbedBuilder()
+            .setTitle('🛡️ Contenu bloqué par AutoMod')
+            .setDescription(
+                `${common}\n**Mot / motif détecté :** ${clip(execution.matchedKeyword ?? execution.matchedContent, 200)}\n` +
+                `**Contenu :** ${clip(execution.content, 1000)}`
+            ));
+    }
     emitLog(Client, 'moderation', new EmbedBuilder().setTitle('🛡️ Action AutoMod').setDescription(common));
 };
