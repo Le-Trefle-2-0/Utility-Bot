@@ -11,12 +11,20 @@ module.exports = async (Client) => {
             const eventName = file.split('/').findLast(() => true).split('.')[0];
             console.log(`Loaded ${eventName} from ${file}`);
 
-            Client.on(eventName, (...args) => {
+            Client.on(eventName, async (...args) => {
                 const guildId = args[0]?.guildId || args[0]?.guild?.id || (args[0]?.message ? args[0].message.guildId : null) || (args[1]?.guildId || args[1]?.guild?.id);
 
                 if (guildId && guildId !== Client.settings.mainGuildID) return;
 
-                event(Client, ...args);
+                try {
+                    // Les modèles (Client.ModLogs, etc.) n'existent qu'une fois la base initialisée :
+                    // on retient les évènements reçus avant, et on les abandonne si l'initialisation a échoué.
+                    // clientReady attend déjà dbReady lui-même.
+                    if (eventName !== 'clientReady' && Client.dbReady) await Client.dbReady;
+                    await event(Client, ...args);
+                } catch (error) {
+                    Client.log?.error?.(`Erreur dans l'évènement ${eventName} : ${error.stack || error.message}`);
+                }
             });
             delete require.cache[require.resolve(`../Events/${file}`)];
         });
