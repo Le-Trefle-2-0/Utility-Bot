@@ -19,7 +19,35 @@ module.exports = async (Client) => {
         logging: false
     });
 
-    Client.Questions = await Client.db.define('questions', {
+    // Sous SQLite, `sync({ alter: true })` recrée la table via une table `<nom>_backup`. Si le processus est
+    // interrompu (redémarrage) pendant cette opération, la table de sauvegarde reste et fait échouer tous les
+    // démarrages suivants. On la supprime donc avant de synchroniser.
+    try {
+        const qi = Client.db.getQueryInterface();
+        const tables = await qi.showAllTables();
+        for (const table of tables) {
+            const name = typeof table === 'string' ? table : table.tableName;
+            if (name?.endsWith('_backup')) {
+                await qi.dropTable(name);
+                console.warn(`[database] Table de sauvegarde obsolète supprimée : ${name}`);
+            }
+        }
+    } catch (e) {
+        console.warn('[database] Nettoyage des tables _backup impossible :', e.message);
+    }
+
+    // Tente d'abord de mettre le schéma à jour ; si l'alter échoue, retombe sur un simple sync() pour que
+    // le modèle reste utilisable au lieu de laisser Client.<Model> indéfini et de faire planter les évènements.
+    const syncModel = async (model, options) => {
+        try {
+            return await model.sync(options);
+        } catch (error) {
+            console.error(`[database] sync(${JSON.stringify(options)}) a échoué pour "${model.tableName}" :`, error.parent?.message || error.message);
+            return model.sync();
+        }
+    };
+
+    Client.Questions = await syncModel(Client.db.define('questions', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
@@ -37,9 +65,9 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: true
         }
-    }).sync({ alter: true });
+    }), { alter: true });
 
-    Client.Tickets = await Client.db.define('tickets', {
+    Client.Tickets = await syncModel(Client.db.define('tickets', {
         id: {
             type: sequelize.UUID,
             primaryKey: true,
@@ -105,10 +133,10 @@ module.exports = async (Client) => {
             { fields: ['assignedTeam'] },
             { fields: ['createdAt'] }
         ]
-    }).sync({ alter: true });
+    }), { alter: true });
 
     // Salons de tickets clos : verrouillés, puis supprimés à l'échéance (survit aux redémarrages)
-    Client.TicketDeletions = await Client.db.define('ticketdeletions', {
+    Client.TicketDeletions = await syncModel(Client.db.define('ticketdeletions', {
         channelID: {
             type: sequelize.STRING,
             primaryKey: true
@@ -117,10 +145,10 @@ module.exports = async (Client) => {
             type: sequelize.DATE,
             allowNull: false
         }
-    }).sync({ alter: true });
+    }), { alter: true });
 
     // Exceptions à l'horaire de fermeture des salons (ex : réveillon du nouvel an)
-    Client.CloseExceptions = await Client.db.define('closeexceptions', {
+    Client.CloseExceptions = await syncModel(Client.db.define('closeexceptions', {
         date: {
             type: sequelize.STRING, // AAAA-MM-JJ : jour où la fermeture normale aurait lieu
             primaryKey: true
@@ -133,7 +161,7 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: true
         }
-    }).sync({ alter: true });
+    }), { alter: true });
 
     // Migration : la première version de ces tables n'avait pas de colonne `id` (clé composite, qui
     // rendait chaque colonne UNIQUE sous SQLite). On les recrée en conservant les données.
@@ -292,7 +320,7 @@ module.exports = async (Client) => {
         indexes: [{ unique: true, fields: ['messageID'] }]
     }).sync();
 
-    Client.Timeouts = await Client.db.define('timeouts', {
+    Client.Timeouts = await syncModel(Client.db.define('timeouts', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
@@ -318,9 +346,9 @@ module.exports = async (Client) => {
             type: sequelize.INTEGER,
             allowNull: false
         }
-    }).sync({ alter: true });
+    }), { alter: true });
 
-    Client.ModLogs = await Client.db.define('modlogs', {
+    Client.ModLogs = await syncModel(Client.db.define('modlogs', {
         id: {
             type: sequelize.INTEGER,
             primaryKey: true,
@@ -350,7 +378,7 @@ module.exports = async (Client) => {
             type: sequelize.STRING,
             allowNull: false
         }
-    }).sync({ alter: true });
+    }), { alter: true });
 
     
     // Cleanup: ensure any legacy DM Lock table is removed from the database
