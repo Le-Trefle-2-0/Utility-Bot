@@ -1,5 +1,5 @@
 const { Collection, EmbedBuilder, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const Tesseract = require('tesseract.js');
+const { extractText, isSupportedImage } = require('../Utility/ocr');
 const axios = require('axios');
 const zlib = require('zlib');
 const { createChatCompletion } = require('../Utility/llmProvider');
@@ -276,9 +276,9 @@ module.exports = async (Client, message) => {
         // --- ÉVOLUTION 1 : Analyse OCR des images ---
         if (Client.settings.antiScam?.ocrEnabled && message.attachments.size > 0) {
             const image = message.attachments.first();
-            if (image.contentType?.startsWith('image/')) {
+            if (isSupportedImage(image.contentType)) {
                 try {
-                    const { data: { text } } = await Tesseract.recognize(image.url, 'eng+fra');
+                    const text = await extractText(image.url);
                     contentToAnalyze += " " + text.toLowerCase();
                 } catch (err) {
                     Client.log.error(`Erreur OCR : ${err.message}`);

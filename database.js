@@ -244,6 +244,38 @@ module.exports = async (Client) => {
         await Client.LevelRewards.bulkCreate(legacyRows.levelrewards.map(({ guildID, level, roleID }) => ({ guildID, level, roleID })), { ignoreDuplicates: true });
     }
 
+    // Sections du message des ressources modifiées depuis Discord (les autres gardent leur contenu par défaut)
+    Client.ResourceSections = await Client.db.define('resourcesections', {
+        key: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        content: {
+            type: sequelize.TEXT,
+            allowNull: false
+        },
+        updatedBy: {
+            type: sequelize.STRING,
+            allowNull: true
+        }
+    }).sync();
+
+    // Emplacement du message des ressources publié (un par serveur)
+    Client.ResourceMessages = await Client.db.define('resourcemessages', {
+        guildID: {
+            type: sequelize.STRING,
+            primaryKey: true
+        },
+        channelID: {
+            type: sequelize.STRING,
+            allowNull: false
+        },
+        messageID: {
+            type: sequelize.STRING,
+            allowNull: false
+        }
+    }).sync();
+
     // Évènements d'XP multipliée : channelID vaut '*' pour tout le serveur
     Client.XpEvents = await Client.db.define('xpevents', {
         id: {
